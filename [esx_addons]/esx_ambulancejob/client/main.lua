@@ -89,7 +89,6 @@ function OnPlayerDeath(elapsed)
   SetExtraTimecycleModifier("fp_vig_red")
   SetExtraTimecycleModifierStrength(1.0)
   SetPedMotionBlur(PlayerPedId(), true)
-  TriggerServerEvent('esx_ambulancejob:setDeathStatus', true)
   StartDeathTimer(elapsed)
   StartDeathCam()
   isDead = true
@@ -354,8 +353,6 @@ function GetClosestRespawnPoint()
 end
 
 function RemoveItemsAfterRPDeath()
-  TriggerServerEvent('esx_ambulancejob:setDeathStatus', false)
-
   CreateThread(function()
     ESX.TriggerServerCallback('esx_ambulancejob:removeItemsAfterRPDeath', function()
       local ClosestHospital = GetClosestRespawnPoint()
@@ -404,7 +401,6 @@ RegisterNetEvent('esx_ambulancejob:revive')
 AddEventHandler('esx_ambulancejob:revive', function()
   local playerPed = PlayerPedId()
   local coords = GetEntityCoords(playerPed)
-  TriggerServerEvent('esx_ambulancejob:setDeathStatus', false)
 
   DoScreenFadeOut(800)
 
