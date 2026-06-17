@@ -15,6 +15,20 @@ local function isDeadState(src, bool)
 	Player(src).state:set('isDead', bool, true)
 end
 
+local function persistDeathStatus(src, bool)
+	local xPlayer = src and ESX.GetPlayerFromId(src)
+	if not xPlayer or type(bool) ~= 'boolean' then return end
+
+	MySQL.update('UPDATE users SET is_dead = ? WHERE identifier = ?', { bool, xPlayer.identifier })
+	isDeadState(src, bool)
+
+	if bool then
+		xPlayer.setMeta('deathTime', os.time())
+	elseif xPlayer.getMeta().deathTime ~= nil then
+		xPlayer.clearMeta('deathTime')
+	end
+end
+
 RegisterNetEvent('esx_ambulancejob:revive')
 AddEventHandler('esx_ambulancejob:revive', function(playerId)
 	playerId = tonumber(playerId)
@@ -71,9 +85,11 @@ end)
 RegisterNetEvent('esx:onPlayerDeath')
 AddEventHandler('esx:onPlayerDeath', function(data)
 	local source = source
+	if deadPlayers[source] then return end
+
 	deadPlayers[source] = 'dead'
 	local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
-	isDeadState(source, true)
+	persistDeathStatus(source, true)
 
 	for _, xPlayer in pairs(Ambulance) do
 		xPlayer.triggerEvent('esx_ambulancejob:PlayerDead', source)
@@ -354,10 +370,29 @@ ESX.RegisterServerCallback('esx_ambulancejob:getDeadPlayers', function(source, c
 	end
 end)
 
-ESX.RegisterServerCallback('esx_ambulancejob:getDeathStatus', function(source, cb)
-	local xPlayer = ESX.GetPlayerFromId(source)
+RegisterNetEvent('esx_ambulancejob:requestDeathRestore')
+AddEventHandler('esx_ambulancejob:requestDeathRestore', function()
+	local _source = source
+	local xPlayer = ESX.GetPlayerFromId(_source)
+	if not xPlayer then return end
+
 	MySQL.scalar('SELECT is_dead FROM users WHERE identifier = ?', { xPlayer.identifier }, function(isDead)
-		cb(isDead)
+		if isDead ~= true and isDead ~= 1 then return end
+		if deadPlayers[_source] then return end
+
+		deadPlayers[_source] = 'dead'
+		isDeadState(_source, true)
+
+		local deathTime = xPlayer.getMeta().deathTime
+		local elapsed = deathTime and (os.time() - deathTime) or 0
+		if elapsed < 0 then elapsed = 0 end
+
+		local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
+		for _, xAmbulance in pairs(Ambulance) do
+			xAmbulance.triggerEvent('esx_ambulancejob:PlayerDead', _source)
+		end
+
+		xPlayer.triggerEvent('esx_ambulancejob:restoreDeath', elapsed)
 	end)
 end)
 

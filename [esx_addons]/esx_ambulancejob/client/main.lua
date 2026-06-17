@@ -6,6 +6,25 @@ AddEventHandler('esx:playerLoaded', function(xPlayer)
   ESX.PlayerLoaded = true
 end)
 
+RegisterNetEvent('esx_ambulancejob:restoreDeath')
+AddEventHandler('esx_ambulancejob:restoreDeath', function(elapsed)
+  CreateThread(function()
+    while not ESX.PlayerLoaded or not ESX.PlayerData.ped or not DoesEntityExist(ESX.PlayerData.ped) do
+      Wait(100)
+    end
+
+    local bleedoutLimit = ESX.Math.Round(Config.EarlyRespawnTimer / 1000) + ESX.Math.Round(Config.BleedoutTimer / 1000)
+
+    if elapsed and elapsed >= bleedoutLimit then
+      RemoveItemsAfterRPDeath()
+      return
+    end
+
+    ESX.SetPlayerData('dead', true)
+    OnPlayerDeath(elapsed)
+  end)
+end)
+
 RegisterNetEvent('esx:onPlayerLogout')
 AddEventHandler('esx:onPlayerLogout', function()
   ESX.PlayerLoaded = false
@@ -15,6 +34,7 @@ end)
 AddEventHandler('esx:onPlayerSpawn', function()
   if firstSpawn then
     firstSpawn = false
+    TriggerServerEvent('esx_ambulancejob:requestDeathRestore')
     return
   end
   isDead = false
@@ -59,7 +79,9 @@ AddEventHandler('esx_ambulancejob:clsearch', function(medicId)
   end
 end)
 
-function OnPlayerDeath()
+function OnPlayerDeath(elapsed)
+  if isDead then return end
+
   ESX.CloseContext()
   ClearTimecycleModifier()
   SetTimecycleModifier("REDMIST_blend")
@@ -68,7 +90,7 @@ function OnPlayerDeath()
   SetExtraTimecycleModifierStrength(1.0)
   SetPedMotionBlur(PlayerPedId(), true)
   TriggerServerEvent('esx_ambulancejob:setDeathStatus', true)
-  StartDeathTimer()
+  StartDeathTimer(elapsed)
   StartDeathCam()
   isDead = true
   StartDeathLoop() 
@@ -218,7 +240,9 @@ function secondsToClock(seconds)
   end
 end
 
-function StartDeathTimer()
+function StartDeathTimer(elapsed)
+  elapsed = elapsed or 0
+
   local canPayFine = false
 
   if Config.EarlyRespawnFine then
@@ -229,6 +253,15 @@ function StartDeathTimer()
 
   local earlySpawnTimer = ESX.Math.Round(Config.EarlyRespawnTimer / 1000)
   local bleedoutTimer = ESX.Math.Round(Config.BleedoutTimer / 1000)
+
+  if elapsed > 0 then
+    if elapsed >= earlySpawnTimer then
+      bleedoutTimer = bleedoutTimer - (elapsed - earlySpawnTimer)
+      earlySpawnTimer = 0
+    else
+      earlySpawnTimer = earlySpawnTimer - elapsed
+    end
+  end
 
   CreateThread(function()
     -- early respawn timer
