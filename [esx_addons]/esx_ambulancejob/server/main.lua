@@ -88,6 +88,9 @@ AddEventHandler('esx:onPlayerDeath', function(data)
 	local source = source
 	if deadPlayers[source] then return end
 
+	local ped = GetPlayerPed(source)
+	if ped ~= 0 and GetEntityHealth(ped) > 0 then return end
+
 	deadPlayers[source] = 'dead'
 	local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
 	persistDeathStatus(source, true)
