@@ -24,8 +24,14 @@ local function persistDeathStatus(src, bool)
 
 	if bool then
 		xPlayer.setMeta('deathTime', os.time())
-	elseif xPlayer.getMeta().deathTime ~= nil then
-		xPlayer.clearMeta('deathTime')
+		xPlayer.setMeta('health', 0)
+	else
+		if xPlayer.getMeta().deathTime ~= nil then
+			xPlayer.clearMeta('deathTime')
+		end
+		if xPlayer.getMeta().health ~= nil then
+			xPlayer.clearMeta('health')
+		end
 	end
 end
 
@@ -87,9 +93,6 @@ RegisterNetEvent('esx:onPlayerDeath')
 AddEventHandler('esx:onPlayerDeath', function(data)
 	local source = source
 	if deadPlayers[source] then return end
-
-	local ped = GetPlayerPed(source)
-	if ped ~= 0 and GetEntityHealth(ped) > 0 then return end
 
 	deadPlayers[source] = 'dead'
 	local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
@@ -395,10 +398,13 @@ AddEventHandler('esx_ambulancejob:requestDeathRestore', function()
 		if isDead ~= true and isDead ~= 1 then return end
 		if deadPlayers[_source] then return end
 
+		local meta = xPlayer.getMeta()
+		if meta.health and meta.health > 0 then return end
+
 		deadPlayers[_source] = 'dead'
 		isDeadState(_source, true)
 
-		local deathTime = xPlayer.getMeta().deathTime
+		local deathTime = meta.deathTime
 		local elapsed = deathTime and (os.time() - deathTime) or 0
 		if elapsed < 0 then elapsed = 0 end
 
