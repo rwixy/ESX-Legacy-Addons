@@ -16,6 +16,10 @@ ESX Ambulance Job is an plugin for ESX with features:
 
 - [esx_society](https://github.com/esx-framework/esx_society)
 
+## Medal.tv auto-clip
+
+Automatically saves a Medal clip when a player dies, using Medal's public FiveM auto-clipping token. On by default; set `Config.Medal.enabled = false` in `config.lua` to turn it off. Each player needs the Medal desktop app running with the Events API enabled, and the clip is saved locally on their own machine.
+
 ## Legal
 
 ### License

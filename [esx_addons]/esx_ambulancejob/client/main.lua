@@ -92,7 +92,8 @@ function OnPlayerDeath(elapsed)
   StartDeathTimer(elapsed)
   StartDeathCam()
   isDead = true
-  StartDeathLoop() 
+  TriggerMedalDeathClip()
+  StartDeathLoop()
   StartDistressSignal()
 
   if Config.DeathAnim.enabled then
