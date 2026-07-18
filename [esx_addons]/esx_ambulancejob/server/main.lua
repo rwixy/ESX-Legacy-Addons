@@ -15,6 +15,20 @@ local function isDeadState(src, bool)
 	Player(src).state:set('isDead', bool, true)
 end
 
+local function persistDeathStatus(src, bool)
+	local xPlayer = src and ESX.GetPlayerFromId(src)
+	if not xPlayer or type(bool) ~= 'boolean' then return end
+
+	MySQL.update('UPDATE users SET is_dead = ? WHERE identifier = ?', { bool, xPlayer.identifier })
+	isDeadState(src, bool)
+
+	if bool then
+		xPlayer.setMeta('deathTime', os.time())
+	elseif xPlayer.getMeta().deathTime ~= nil then
+		xPlayer.clearMeta('deathTime')
+	end
+end
+
 RegisterNetEvent('esx_ambulancejob:revive')
 AddEventHandler('esx_ambulancejob:revive', function(playerId)
 	playerId = tonumber(playerId)
@@ -28,11 +42,11 @@ AddEventHandler('esx_ambulancejob:revive', function(playerId)
 					xPlayer.showNotification(TranslateCap('revive_complete_award', xTarget.name, Config.ReviveReward))
 					xPlayer.addMoney(Config.ReviveReward, "Revive Reward")
 					xTarget.triggerEvent('esx_ambulancejob:revive')
-					isDeadState(xTarget.source, false)
+					persistDeathStatus(xTarget.source, false)
 				else
 					xPlayer.showNotification(TranslateCap('revive_complete', xTarget.name))
 					xTarget.triggerEvent('esx_ambulancejob:revive')
-					isDeadState(xTarget.source, false)
+					persistDeathStatus(xTarget.source, false)
 				end
 				local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
 
@@ -56,6 +70,7 @@ AddEventHandler('txAdmin:events:healedPlayer', function(eventData)
 		return
 	end
 	if deadPlayers[eventData.id] then
+		persistDeathStatus(eventData.id, false)
 		TriggerClientEvent('esx_ambulancejob:revive', eventData.id)
 		local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
 
@@ -71,9 +86,11 @@ end)
 RegisterNetEvent('esx:onPlayerDeath')
 AddEventHandler('esx:onPlayerDeath', function(data)
 	local source = source
+	if deadPlayers[source] then return end
+
 	deadPlayers[source] = 'dead'
 	local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
-	isDeadState(source, true)
+	persistDeathStatus(source, true)
 
 	for _, xPlayer in pairs(Ambulance) do
 		xPlayer.triggerEvent('esx_ambulancejob:PlayerDead', source)
@@ -149,6 +166,11 @@ end)
 
 ESX.RegisterServerCallback('esx_ambulancejob:removeItemsAfterRPDeath', function(source, cb)
 	local xPlayer = ESX.GetPlayerFromId(source)
+	if not xPlayer then return cb() end
+
+	if deadPlayers[source] then
+		persistDeathStatus(source, false)
+	end
 
 	if Config.OxInventory and Config.RemoveItemsAfterRPDeath then
 		exports.ox_inventory:ClearInventory(xPlayer.source)
@@ -312,12 +334,18 @@ AddEventHandler('esx_ambulancejob:giveItem', function(itemName, amount)
 end)
 
 ESX.RegisterCommand('revive', 'admin', function(xPlayer, args, showError)
+	persistDeathStatus(args.playerId.source, false)
+	deadPlayers[args.playerId.source] = nil
 	args.playerId.triggerEvent('esx_ambulancejob:revive')
 end, true, { help = TranslateCap('revive_help'), validate = true, arguments = {
 	{ name = 'playerId', help = 'The player id', type = 'player' }
 } })
 
 ESX.RegisterCommand('reviveall', "admin", function(xPlayer, args, showError)
+	for targetId in pairs(deadPlayers) do
+		persistDeathStatus(targetId, false)
+		deadPlayers[targetId] = nil
+	end
 	TriggerClientEvent('esx_ambulancejob:revive', -1)
 end, false)
 
@@ -354,27 +382,28 @@ ESX.RegisterServerCallback('esx_ambulancejob:getDeadPlayers', function(source, c
 	end
 end)
 
-ESX.RegisterServerCallback('esx_ambulancejob:getDeathStatus', function(source, cb)
-	local xPlayer = ESX.GetPlayerFromId(source)
+RegisterNetEvent('esx_ambulancejob:requestDeathRestore')
+AddEventHandler('esx_ambulancejob:requestDeathRestore', function()
+	local _source = source
+	local xPlayer = ESX.GetPlayerFromId(_source)
+	if not xPlayer then return end
+
 	MySQL.scalar('SELECT is_dead FROM users WHERE identifier = ?', { xPlayer.identifier }, function(isDead)
-		cb(isDead)
-	end)
-end)
+		if isDead ~= true and isDead ~= 1 then return end
+		if deadPlayers[_source] then return end
 
-RegisterNetEvent('esx_ambulancejob:setDeathStatus')
-AddEventHandler('esx_ambulancejob:setDeathStatus', function(isDead)
-	local xPlayer = ESX.GetPlayerFromId(source)
+		deadPlayers[_source] = 'dead'
+		isDeadState(_source, true)
 
-	if type(isDead) == 'boolean' then
-		MySQL.update('UPDATE users SET is_dead = ? WHERE identifier = ?', { isDead, xPlayer.identifier })
-		isDeadState(source, isDead)
-			
-		if not isDead then
-			local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
-			for _, xPlayer in pairs(Ambulance) do
-				xPlayer.triggerEvent('esx_ambulancejob:PlayerNotDead', source)
-			end
+		local deathTime = xPlayer.getMeta().deathTime
+		local elapsed = deathTime and (os.time() - deathTime) or 0
+		if elapsed < 0 then elapsed = 0 end
+
+		local Ambulance = ESX.GetExtendedPlayers("job", "ambulance")
+		for _, xAmbulance in pairs(Ambulance) do
+			xAmbulance.triggerEvent('esx_ambulancejob:PlayerDead', _source)
 		end
-	end
 
+		xPlayer.triggerEvent('esx_ambulancejob:restoreDeath', elapsed)
+	end)
 end)
