@@ -6,6 +6,7 @@ legacyversion '1.13.5'
 lua54 'yes'
 
 shared_scripts {
+	'@esx_lib/imports.lua',
 	'@es_extended/imports.lua',
 	'@es_extended/locale.lua',
 	'locales/*.lua',
