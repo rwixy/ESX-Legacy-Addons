@@ -2,17 +2,47 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'ESX-Framework'
-description 'Allows Players to Store & Retrieve their vehicles'
+description 'Modern Garage System with React UI'
+use_experimental_fxv2_oal 'true'
 
-version '1.0'
-legacyversion '1.14.1'
+version '2.0.0'
+legacyversion '1.13.4'
 
 lua54 'yes'
 ui_page 'nui/index.html'
 files { 'nui/index.html', 'nui/**/*' }
 
-shared_script '@es_extended/imports.lua'
+ui_page 'web/dist/index.html'
 
-server_scripts { '@es_extended/locale.lua', 'locales/*.lua', '@oxmysql/lib/MySQL.lua', 'config.lua', 'server/main.lua' }
+files {
+    'web/dist/index.html',
+    'web/dist/**/*',
+    'locales/*.lua',
+}
 
+<<<<<<< HEAD
 client_scripts { '@es_extended/locale.lua', 'locales/*.lua', 'config.lua', 'client/main.lua' }
+=======
+shared_scripts {
+    '@es_extended/imports.lua',
+    '@es_extended/locale.lua',
+    'locales/*.lua',
+    'config.lua',
+}
+
+server_scripts {
+    '@oxmysql/lib/MySQL.lua',
+    'server/modules/*.lua'
+}
+
+client_scripts {
+    '@es_extended/locale.lua',
+    'client/modules/**/*',
+    'client/init.lua'
+}
+
+dependencies {
+    'es_extended',
+    'oxmysql'
+}
+>>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)

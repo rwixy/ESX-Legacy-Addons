@@ -1,5 +1,16 @@
+<<<<<<< HEAD
 # Logs
 logs
+=======
+# Dependencies
+node_modules/
+
+# Development
+*.local
+
+# Logs
+logs/
+>>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,6 +18,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+<<<<<<< HEAD
 node_modules
 dist
 dist-ssr
@@ -16,10 +28,50 @@ dist-ssr
 .vscode/
 .idea
 .DS_Store
+=======
+# TypeScript
+*.tsbuildinfo
+node_modules/.tmp/
+
+# Testing & Coverage
+coverage/
+.vitest/
+.nyc_output/
+
+# Environment files (IMPORTANT: Never commit secrets!)
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+
+# Bundle analysis
+stats.html
+
+# Cache & Temp
+.cache/
+.vite/
+.eslintcache
+*.cache
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+>>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
 
 node_modules/
+=======
+*~
+
+# NOTE: dist/ is NOT ignored - FiveM resources need the build output in the repo!
+# NOTE: package-lock.json is NOT ignored - needed for reproducible builds!
+>>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
