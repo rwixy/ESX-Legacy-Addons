@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 local shopOpen = false
 local nearbyZone = nil
 function OpenBuyLicenseMenu(zone)
@@ -203,3 +204,19 @@ ESX.RegisterInteraction("open_weaponshop", function ()
 end, function()
     return nearbyZone ~= nil and not shopOpen
 end)
+=======
+CreateThread(function()
+	while true do
+		local sleep = DrawMarkersAndCheckProximity()
+		Wait(sleep)
+	end
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+	if resource == GetCurrentResourceName() then
+		if IsUIOpen() then
+			CloseShop()
+		end
+	end
+end)
+>>>>>>> upstream-1142/1.14.2

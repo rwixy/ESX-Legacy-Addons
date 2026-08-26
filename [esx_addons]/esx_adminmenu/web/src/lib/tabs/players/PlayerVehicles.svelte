@@ -54,6 +54,10 @@
 	});
 
 	async function loadMoreVehicles() {
+<<<<<<< HEAD
+=======
+		if (search.trim() !== "") return;
+>>>>>>> upstream-1142/1.14.2
 		await fetchVehiclePage({ search: search.trim() });
 	}
 
@@ -116,7 +120,11 @@
 </div>
 
 <div class="list-wrapper">
+<<<<<<< HEAD
 	<VehiclesList {filteredVehicles} loading={uiState.vehicleLoading} hasMore={uiState.vehicleHasMore} onNeedMore={loadMoreVehicles} />
+=======
+	<VehiclesList {filteredVehicles} loading={uiState.vehicleLoading} hasMore={search.trim() === "" && uiState.vehicleHasMore} onNeedMore={loadMoreVehicles} />
+>>>>>>> upstream-1142/1.14.2
 </div>
 
 <style>

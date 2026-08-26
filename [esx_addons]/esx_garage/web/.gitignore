@@ -1,7 +1,10 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Logs
 logs
 =======
+=======
+>>>>>>> upstream-1142/1.14.2
 # Dependencies
 node_modules/
 
@@ -10,7 +13,10 @@ node_modules/
 
 # Logs
 logs/
+<<<<<<< HEAD
 >>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
+=======
+>>>>>>> upstream-1142/1.14.2
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -18,6 +24,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 node_modules
 dist
@@ -29,6 +36,8 @@ dist-ssr
 .idea
 .DS_Store
 =======
+=======
+>>>>>>> upstream-1142/1.14.2
 # TypeScript
 *.tsbuildinfo
 node_modules/.tmp/
@@ -60,18 +69,27 @@ stats.html
 .idea/
 .DS_Store
 Thumbs.db
+<<<<<<< HEAD
 >>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
+=======
+>>>>>>> upstream-1142/1.14.2
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 node_modules/
 =======
+=======
+>>>>>>> upstream-1142/1.14.2
 *~
 
 # NOTE: dist/ is NOT ignored - FiveM resources need the build output in the repo!
 # NOTE: package-lock.json is NOT ignored - needed for reproducible builds!
+<<<<<<< HEAD
 >>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
+=======
+>>>>>>> upstream-1142/1.14.2

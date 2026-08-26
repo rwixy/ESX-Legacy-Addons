@@ -32,9 +32,15 @@ local function ensureModelLoaded(modelHash, spinnerText)
         end
     end
 
+<<<<<<< HEAD
     BusyspinnerOff()
     return HasModelLoaded(modelHash)
 end
+=======
+			xLib.callback('esx_vehicleshop:retrieveJobVehicles', false, function(jobVehicles)
+				if #jobVehicles > 0 then
+					local allVehicleProps = {}
+>>>>>>> upstream-1142/1.14.2
 
 local function safeInsideShopCoords(station, part, partNum)
     local cfg = Config.PoliceStations[station][part][partNum]
@@ -90,9 +96,15 @@ local function getAvailableSpawnPoint(station, part, partNum)
     return false
 end
 
+<<<<<<< HEAD
 function OpenVehicleSpawnerMenu(typeKey, station, part, partNum)
     local ped = PlayerPedId()
     local playerCoords = GetEntityCoords(ped)
+=======
+									xLib.game.spawnVehicle(elementG.model, spawnPoint.coords, spawnPoint.heading, function(vehicle)
+										local vehicleProps = allVehicleProps[elementG.plate]
+										xLib.game.setVehicleProperties(vehicle, vehicleProps)
+>>>>>>> upstream-1142/1.14.2
 
     local menuEls = {
         {unselectable = true, icon = "fas fa-car", title = TranslateCap('garage_title')},
@@ -196,13 +208,18 @@ function OpenVehicleSpawnerMenu(typeKey, station, part, partNum)
 end
 
 function StoreNearbyVehicle(playerCoords)
+<<<<<<< HEAD
     local vehicles, plates, index = ESX.Game.GetVehiclesInArea(playerCoords, 30.0), {}, {}
+=======
+	local vehicles, plates, index = xLib.game.getVehiclesInArea(playerCoords, 30.0), {}, {}
+>>>>>>> upstream-1142/1.14.2
 
     if not vehicles or #vehicles == 0 then
         ESX.ShowNotification(TranslateCap('garage_store_nearby'))
         return
     end
 
+<<<<<<< HEAD
     for i=1, #vehicles do
         local veh = vehicles[i]
         if GetVehicleNumberOfPassengers(veh) == 0 and IsVehicleSeatFree(veh, -1) then
@@ -211,6 +228,14 @@ function StoreNearbyVehicle(playerCoords)
             index[plate] = veh
         end
     end
+=======
+	xLib.callback('esx_policejob:storeNearbyVehicle', false, function(plate)
+		if plate then
+			local vehicleId = index[plate]
+			local attempts = 0
+			xLib.game.deleteVehicle(vehicleId)
+			local isBusy = true
+>>>>>>> upstream-1142/1.14.2
 
     ESX.TriggerServerCallback('esx_policejob:storeNearbyVehicle', function(plate)
         if plate then
@@ -242,23 +267,58 @@ function StoreNearbyVehicle(playerCoords)
                 end
             end
 
+<<<<<<< HEAD
             isBusy = false
             ESX.ShowNotification(TranslateCap('garage_has_stored'))
         else
             ESX.ShowNotification(TranslateCap('garage_has_notstored'))
         end
     end, plates)
+=======
+				-- Give up
+				if attempts > 30 then
+					break
+				end
+
+				vehicles = xLib.game.getVehiclesInArea(playerCoords, 30.0)
+				if #vehicles > 0 then
+					for i = 1, #vehicles do
+						local vehicle = vehicles[i]
+						if ESX.Math.Trim(GetVehicleNumberPlateText(vehicle)) == plate then
+							xLib.game.deleteVehicle(vehicle)
+							break
+						end
+					end
+				end
+			end
+
+			isBusy = false
+			ESX.ShowNotification(TranslateCap('garage_has_stored'))
+		else
+			ESX.ShowNotification(TranslateCap('garage_has_notstored'))
+		end
+	end, plates)
+>>>>>>> upstream-1142/1.14.2
 end
 
 function OpenShopMenu(elements, restoreCoords, shopCoords, station, part, partNum)
     local playerPed = PlayerPedId()
     isInShopMenu = true
 
+<<<<<<< HEAD
     ESX.OpenContext("right", elements, function(_, element)
         local actions = {
             {unselectable = true, icon = "fas fa-car", title = element.title},
             {icon = "fas fa-eye", title = TranslateCap('view'), value = "view"}
         }
+=======
+	for i=1, #spawnPoints, 1 do
+		if xLib.game.isSpawnPointClear(spawnPoints[i].coords, spawnPoints[i].radius) then
+			found, foundSpawnPoint = true, spawnPoints[i]
+			break
+		end
+	end
+>>>>>>> upstream-1142/1.14.2
 
         ESX.OpenContext("right", actions, function(_, element2)
             if element2.value ~= "view" then return end
@@ -341,6 +401,89 @@ function OpenShopMenu(elements, restoreCoords, shopCoords, station, part, partNu
     end)
 end
 
+<<<<<<< HEAD
+=======
+function OpenShopMenu(elements, restoreCoords, shopCoords)
+	local playerPed = PlayerPedId()
+	isInShopMenu = true
+	ESX.OpenContext("right", elements, function(menu,element)
+		local elements2 = {
+			{unselectable = true, icon = "fas fa-car", title = element.title},
+			{icon = "fas fa-eye", title = TranslateCap('view'), value = "view"}
+		}
+
+		ESX.OpenContext("right", elements2, function(menu2,element2)
+			if element2.value == "view" then
+				DeleteSpawnedVehicles()
+				WaitForVehicleToLoad(element.model)
+
+				xLib.game.spawnLocalVehicle(element.model, shopCoords, 0.0, function(vehicle)
+					table.insert(spawnedVehicles, vehicle)
+					TaskWarpPedIntoVehicle(playerPed, vehicle, -1)
+					FreezeEntityPosition(vehicle, true)
+					SetModelAsNoLongerNeeded(element.model)
+
+					if element.props then
+						xLib.game.setVehicleProperties(vehicle, element.props)
+					end
+				end)
+
+				local elements3 = {
+					{unselectable = true, icon = "fas fa-car", title = element.title},
+					{icon = "fas fa-check-double", title = TranslateCap('buy_car'), value = "buy"},
+					{icon = "fas fa-eye", title = TranslateCap('stop_view'), value = "stop"}
+				}
+
+				ESX.OpenContext("right", elements3, function(menu3,element3)
+					if element3.value == 'stop' then
+						isInShopMenu = false
+						ESX.CloseContext()
+
+						DeleteSpawnedVehicles()
+						FreezeEntityPosition(playerPed, false)
+						SetEntityVisible(playerPed, true)
+
+						xLib.entity.Teleport(playerPed, restoreCoords)
+					elseif element3.value == "buy" then
+						local newPlate = exports['esx_vehicleshop']:GeneratePlate()
+						local vehicle  = GetVehiclePedIsIn(playerPed, false)
+						local props    = xLib.game.getVehicleProperties(vehicle)
+						props.plate    = newPlate
+
+						xLib.callback('esx_policejob:buyJobVehicle', false, function (bought)
+							if bought then
+								ESX.ShowNotification(TranslateCap('vehicleshop_bought', element.name, ESX.Math.GroupDigits(element.price)))
+
+								isInShopMenu = false
+								ESX.CloseContext()
+								DeleteSpawnedVehicles()
+								FreezeEntityPosition(playerPed, false)
+								SetEntityVisible(playerPed, true)
+
+								xLib.entity.Teleport(playerPed, restoreCoords)
+							else
+								ESX.ShowNotification(TranslateCap('vehicleshop_money'))
+								ESX.CloseContext()
+							end
+						end, props, element.type)
+					end
+				end, function()
+					isInShopMenu = false
+					ESX.CloseContext()
+
+					DeleteSpawnedVehicles()
+					FreezeEntityPosition(playerPed, false)
+					SetEntityVisible(playerPed, true)
+
+					xLib.entity.Teleport(playerPed, restoreCoords)
+				end)
+			end
+		end)
+	end)
+end
+
+
+>>>>>>> upstream-1142/1.14.2
 CreateThread(function()
     while true do
         if isInShopMenu then
@@ -358,3 +501,33 @@ CreateThread(function()
         end
     end
 end)
+<<<<<<< HEAD
+=======
+
+function DeleteSpawnedVehicles()
+	while #spawnedVehicles > 0 do
+		local vehicle = spawnedVehicles[1]
+		xLib.game.deleteVehicle(vehicle)
+		table.remove(spawnedVehicles, 1)
+	end
+end
+
+function WaitForVehicleToLoad(modelHash)
+	modelHash = (type(modelHash) == 'number' and modelHash or joaat(modelHash))
+
+	if not HasModelLoaded(modelHash) then
+		RequestModel(modelHash)
+
+		BeginTextCommandBusyspinnerOn('STRING')
+		AddTextComponentSubstringPlayerName(TranslateCap('vehicleshop_awaiting_model'))
+		EndTextCommandBusyspinnerOn(4)
+
+		while not HasModelLoaded(modelHash) do
+			Wait(0)
+			DisableAllControlActions(0)
+		end
+
+		BusyspinnerOff()
+	end
+end
+>>>>>>> upstream-1142/1.14.2

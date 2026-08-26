@@ -83,6 +83,61 @@ local function normalizePlate(plate)
 	return plate
 end
 
+<<<<<<< HEAD
+=======
+local function addUniquePlateValue(values, value)
+	if type(value) ~= "string" or value == "" then
+		return
+	end
+
+	for i = 1, #values do
+		if values[i] == value then
+			return
+		end
+	end
+
+	values[#values + 1] = value
+end
+
+local function plateLookupValues(plate)
+	local normalized = normalizePlate(plate)
+	local values = {}
+
+	addUniquePlateValue(values, normalized)
+
+	if normalized and #normalized > 0 and #normalized < 8 then
+		addUniquePlateValue(values, normalized .. string.rep(" ", 8 - #normalized))
+	end
+
+	return values
+end
+
+local function plateCondition(plate)
+	local values = plateLookupValues(plate)
+
+	if #values < 1 then
+		return "`plate` = ?", { "" }
+	end
+
+	if #values == 1 then
+		return "`plate` = ?", values
+	end
+
+	local placeholders = {}
+	for i = 1, #values do
+		placeholders[i] = "?"
+	end
+
+	return ("`plate` IN (%s)"):format(table.concat(placeholders, ", ")), values
+end
+
+local function appendParams(target, values)
+	for i = 1, #values do
+		target[#target + 1] = values[i]
+	end
+end
+
+>>>>>>> upstream-1142/1.14.2
 local function normalizeBanDuration(minutes)
 	local duration = tonumber(minutes)
 	if not duration or duration <= 0 then
@@ -615,7 +670,11 @@ end)
 
 -- VEHICLES
 
+<<<<<<< HEAD
 local function vehicleUpdate(source, data, query, params, feature)
+=======
+local function vehicleUpdate(source, data, queryTemplate, params, feature)
+>>>>>>> upstream-1142/1.14.2
 	if not Helpers.hasFeaturePermission(source, feature or "vehicleManagement") then
 		return { success = false, err = "Insufficient Permissions" }
 	end
@@ -628,15 +687,24 @@ local function vehicleUpdate(source, data, query, params, feature)
 		return { success = false, err = "Missing plate" }
 	end
 
+<<<<<<< HEAD
 	params[#params + 1] = plate
 
 	async(function()
 		Helpers.safeUpdate(query, params)
+=======
+	local condition, plateParams = plateCondition(plate)
+	appendParams(params, plateParams)
+
+	async(function()
+		Helpers.safeUpdate(queryTemplate:format(condition), params)
+>>>>>>> upstream-1142/1.14.2
 	end)
 
 	return { success = true }
 end
 
+<<<<<<< HEAD
 Helpers.registerCallback("esx-adminmenu:server:vehicleImpound", function(source, data)
 	data = data or {}
 	local impoundName = trimString(data.impoundName)
@@ -651,16 +719,119 @@ Helpers.registerCallback("esx-adminmenu:server:vehicleImpound", function(source,
 		data,
 		"UPDATE owned_vehicles SET pound = ? WHERE plate = ?",
 		{ impoundName },
+=======
+local function firstImpoundName()
+	local impounds = Helpers.getImpounds() or {}
+
+	for impoundName in pairs(impounds) do
+		return impoundName
+	end
+
+	return nil
+end
+
+local function setVehicleImpounded(plate, impoundName)
+	local ok, handled = pcall(function()
+		return exports["esx_garage"]:impoundVehicle(plate, impoundName)
+	end)
+
+	if ok and handled == true then
+		return { success = true }
+	end
+
+	if not impoundName or impoundName == "" then
+		impoundName = firstImpoundName()
+	end
+
+	if not impoundName then
+		return { success = false, err = "Invalid impound." }
+	end
+
+	local condition, plateParams = plateCondition(plate)
+	local params = { impoundName }
+	appendParams(params, plateParams)
+
+	local affected = Helpers.safeUpdate(
+		("UPDATE owned_vehicles SET stored = 1, parking = NULL, pound = ? WHERE %s"):format(condition),
+		params
+	)
+
+	if affected == nil then
+		return { success = false, err = "Failed to impound vehicle." }
+	end
+
+	if affected < 1 then
+		return { success = false, err = "Vehicle not found." }
+	end
+
+	return { success = true }
+end
+
+Helpers.registerCallback("esx-adminmenu:server:vehicleImpound", function(source, data)
+	if not Helpers.hasFeaturePermission(source, "vehicleManagement") then
+		return { success = false, err = "Insufficient Permissions" }
+	end
+
+	data = data or {}
+	local plate = normalizePlate(data.plate)
+
+	if not plate then
+		return { success = false, err = "Missing plate" }
+	end
+
+	local impoundName = trimString(data.impoundName)
+
+	if impoundName == "" then
+		return setVehicleImpounded(plate)
+	end
+
+	local impounds = Helpers.getImpounds() or {}
+
+	if next(impounds) and not impounds[impoundName] then
+		return { success = false, err = "Invalid impound." }
+	end
+
+	return setVehicleImpounded(plate, impoundName)
+end)
+
+Helpers.registerCallback("esx-adminmenu:server:vehicleUnimpound", function(source, data)
+	return vehicleUpdate(
+		source,
+		data or {},
+		"UPDATE owned_vehicles SET stored = 1, parking = NULL, pound = NULL WHERE %s",
+		{},
+>>>>>>> upstream-1142/1.14.2
 		"vehicleManagement"
 	)
 end)
 
+<<<<<<< HEAD
 Helpers.registerCallback("esx-adminmenu:server:vehicleUnimpound", function(source, data)
 	return vehicleUpdate(source, data or {}, "UPDATE owned_vehicles SET pound = NULL WHERE plate = ?", {}, "vehicleManagement")
 end)
 
 Helpers.registerCallback("esx-adminmenu:server:vehicleDelete", function(source, data)
 	return vehicleUpdate(source, data or {}, "DELETE FROM owned_vehicles WHERE plate = ?", {}, "vehicleDestructive")
+=======
+Helpers.registerCallback("esx-adminmenu:server:vehicleDelete", function(source, data)
+	return vehicleUpdate(source, data or {}, "DELETE FROM owned_vehicles WHERE %s", {}, "vehicleDestructive")
+end)
+
+RegisterNetEvent("esx-adminmenu:server:impoundDeletedVehicle")
+AddEventHandler("esx-adminmenu:server:impoundDeletedVehicle", function(plate)
+	local source = source
+
+	if not Helpers.hasFeaturePermission(source, "vehicleDestructive") then
+		return
+	end
+
+	plate = normalizePlate(plate)
+	if not plate then
+		return
+	end
+
+	setVehicleImpounded(plate)
+>>>>>>> upstream-1142/1.14.2
 end)
 
 -- NOTIFY

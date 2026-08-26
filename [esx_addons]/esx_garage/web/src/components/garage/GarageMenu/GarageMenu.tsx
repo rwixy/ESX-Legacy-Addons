@@ -9,7 +9,11 @@ import { useGarageStore } from '@/store/garage.store';
 import { useNuiEvent } from '@/hooks/useNuiEvent';
 import { useScale } from '@/providers/ScaleProvider';
 import { NuiEventType } from '@/types/nui.types';
+<<<<<<< HEAD
 import type { Vehicle } from '@/types/vehicle.types';
+=======
+import type { MileageUnit, Vehicle, VehiclePagination, VehicleStats } from '@/types/vehicle.types';
+>>>>>>> upstream-1142/1.14.2
 import type { Garage } from '@/types/garage.types';
 
 const Container = styled.div`
@@ -75,6 +79,12 @@ const LoadingSpinner = styled.div`
 interface OpenGarageData {
   garage: Garage;
   vehicles: Vehicle[];
+<<<<<<< HEAD
+=======
+  mileageUnit?: MileageUnit;
+  pagination: VehiclePagination;
+  stats?: VehicleStats;
+>>>>>>> upstream-1142/1.14.2
 }
 
 export const GarageMenu: React.FC = () => {
@@ -87,7 +97,12 @@ export const GarageMenu: React.FC = () => {
     setOpen,
     selectGarage,
     selectVehicle,
+<<<<<<< HEAD
     updateVehicles
+=======
+    updateVehicles,
+    updateVehiclePage
+>>>>>>> upstream-1142/1.14.2
   } = useGarageStore();
 
   const activeTheme = useMemo(() => {
@@ -99,7 +114,15 @@ export const GarageMenu: React.FC = () => {
   // Listen for NUI events
   useNuiEvent<OpenGarageData>(NuiEventType.OPEN_GARAGE, (data) => {
     selectGarage(data.garage);
+<<<<<<< HEAD
     updateVehicles(data.vehicles);
+=======
+    updateVehiclePage({
+      vehicles: data.vehicles,
+      pagination: data.pagination,
+      stats: data.stats
+    });
+>>>>>>> upstream-1142/1.14.2
     setOpen(true);
   });
 
@@ -163,4 +186,8 @@ export const GarageMenu: React.FC = () => {
       </AnimatePresence>
     </ThemeProvider>
   );
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> upstream-1142/1.14.2

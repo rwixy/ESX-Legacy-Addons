@@ -36,9 +36,9 @@ CreateThread(function()
 			end
 
 			if IsControlJustReleased(0, 38) and not isProcessing then
-				ESX.TriggerServerCallback('esx_drugs:cannabis_count', function(xCannabis)
+				xLib.callback('esx_drugs:cannabis_count', false, function(xCannabis)
 					if Config.LicenseEnable then
-						ESX.TriggerServerCallback('esx_license:checkLicense', function(hasProcessingLicense)
+						xLib.callback('esx_license:checkLicense', false, function(hasProcessingLicense)
 							if hasProcessingLicense then
 								ProcessWeed(xCannabis)
 							else
@@ -116,7 +116,7 @@ CreateThread(function()
 			if IsControlJustReleased(0, 38) and not isPickingUp then
 				isPickingUp = true
 
-				ESX.TriggerServerCallback('esx_drugs:canPickUp', function(canPickUp)
+				xLib.callback('esx_drugs:canPickUp', false, function(canPickUp)
 					if canPickUp then
 						TaskStartScenarioInPlace(playerPed, 'world_human_gardener_plant', 0, false)
 
@@ -124,7 +124,7 @@ CreateThread(function()
 						ClearPedTasks(playerPed)
 						Wait(1500)
 		
-						ESX.Game.DeleteObject(nearbyObject)
+						xLib.game.deleteObject(nearbyObject)
 		
 						table.remove(weedPlants, nearbyID)
 						spawnedWeeds = spawnedWeeds - 1
@@ -150,7 +150,7 @@ end)
 AddEventHandler('onResourceStop', function(resource)
 	if resource == GetCurrentResourceName() then
 		for k, v in pairs(weedPlants) do
-			ESX.Game.DeleteObject(v)
+			xLib.game.deleteObject(v)
 		end
 	end
 end)
@@ -160,7 +160,7 @@ function SpawnWeedPlants()
 		Wait(0)
 		local weedCoords = GenerateWeedCoords()
 
-		ESX.Game.SpawnLocalObject('prop_weed_02', weedCoords, function(obj)
+		xLib.game.spawnLocalObject('prop_weed_02', weedCoords, function(obj)
 			PlaceObjectOnGroundProperly(obj)
 			FreezeEntityPosition(obj, true)
 

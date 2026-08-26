@@ -3,10 +3,19 @@ game 'gta5'
 
 description 'ESX Shops - Modern modular shop system with NUI for ESX Legacy'
 lua54 'yes'
+<<<<<<< HEAD
 version '1.2'
 legacyversion '1.14.1'
 
 shared_scripts {
+=======
+use_fxv2_oal 'yes'
+version '2.0.0'
+legacyversion '1.14.1'
+
+shared_scripts {
+	'@esx_lib/imports.lua',
+>>>>>>> upstream-1142/1.14.2
 	'@es_extended/imports.lua',
 	'shared/locale.lua',
 	'shared/config/main.lua',

@@ -20,7 +20,12 @@ function StartTheoryTest()
 	SendNUIMessage({
 		openQuestion = true
 	})
+<<<<<<< HEAD
 	ESX.SetTimeout(200, function()
+=======
+
+	xLib.timeout.setTimeout(200, function()
+>>>>>>> upstream-1142/1.14.2
 		SetNuiFocus(true, true)
 	end)
 	ESX.HideUI()
@@ -42,7 +47,7 @@ function StopTheoryTest(success)
 end
 
 function StartDriveTest(type)
-	ESX.Game.SpawnVehicle(Config.VehicleModels[type], vector3(Config.Zones.VehicleSpawnPoint.Pos.x, Config.Zones.VehicleSpawnPoint.Pos.y, Config.Zones.VehicleSpawnPoint.Pos.z), Config.Zones.VehicleSpawnPoint.Pos.h, function(vehicle)
+	xLib.game.spawnVehicle(Config.VehicleModels[type], vector3(Config.Zones.VehicleSpawnPoint.Pos.x, Config.Zones.VehicleSpawnPoint.Pos.y, Config.Zones.VehicleSpawnPoint.Pos.z), Config.Zones.VehicleSpawnPoint.Pos.h, function(vehicle)
 		CurrentTest       = 'drive'
 		CurrentTestType   = type
 		CurrentCheckPoint = 0
@@ -116,6 +121,7 @@ function OpenDMVSchoolMenu()
             end
         end
 
+<<<<<<< HEAD
         ESX.OpenContext("right", elements, function(menu, element)
             ESX.TriggerServerCallback('esx_dmvschool:canYouPay', function(haveMoney)
                 if not haveMoney then
@@ -132,6 +138,52 @@ function OpenDMVSchoolMenu()
             ESX.TextUI(TranslateCap('press_open_menu'))
         end)
     end, GetPlayerServerId(PlayerId()))
+=======
+		if not ownedLicenses['drive_bike'] then
+			elements[#elements+1] = {
+				icon = "fas fa-car",
+				title = (('%s: <span style="color:green;">%s</span>'):format(TranslateCap('road_test_bike'), TranslateCap('school_item', ESX.Math.GroupDigits(Config.Prices['drive_bike'])))),
+				value = "drive_test",
+				type = "drive_bike"
+			}
+		end
+
+		if not ownedLicenses['drive_truck'] then
+			elements[#elements+1] = {
+				icon = "fas fa-car",
+				title = (('%s: <span style="color:green;">%s</span>'):format(TranslateCap('road_test_truck'), TranslateCap('school_item', ESX.Math.GroupDigits(Config.Prices['drive_truck'])))),
+				value = "drive_test",
+				type = "drive_truck"
+			}
+		end
+	end
+
+	ESX.OpenContext("right", elements, function(menu,element)
+		if element.value == "theory_test" then
+			xLib.callback('esx_dmvschool:canYouPay', false, function(haveMoney)
+				if haveMoney then
+					ESX.CloseContext()
+					StartTheoryTest()
+				else
+					ESX.ShowNotification(TranslateCap('not_enough_money'))
+				end
+			end, 'dmv')
+		elseif element.value == "drive_test" then
+			xLib.callback('esx_dmvschool:canYouPay', false, function(haveMoney)
+				if haveMoney then
+					ESX.CloseContext()
+					StartDriveTest(element.type)
+				else
+					ESX.ShowNotification(TranslateCap('not_enough_money'))
+				end
+			end, element.type)
+		end
+	end, function(menu)
+		CurrentAction     = 'dmvschool_menu'
+		CurrentActionMsg  = TranslateCap('press_open_menu')
+		CurrentActionData = {}
+	end)
+>>>>>>> upstream-1142/1.14.2
 end
 
 RegisterNUICallback('question', function(data, cb)

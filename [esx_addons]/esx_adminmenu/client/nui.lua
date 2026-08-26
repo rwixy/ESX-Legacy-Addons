@@ -74,8 +74,19 @@ local function notifyClientError(err)
     end
 end
 
+<<<<<<< HEAD
 local function openDashboard(cb)
     ESX.TriggerServerCallback("esx-adminmenu:server:openDashboard", function(res)
+=======
+local function refreshInitData()
+    if type(RefreshAdminInitData) == "function" then
+        RefreshAdminInitData()
+    end
+end
+
+local function openDashboard(cb)
+    xLib.callback("esx-adminmenu:server:openDashboard", false, function(res)
+>>>>>>> upstream-1142/1.14.2
         if not res or not res.success then
             local err = getCallbackError(res, "You do not have permission to open the admin dashboard.")
             notifyClientError(err)
@@ -86,12 +97,20 @@ local function openDashboard(cb)
             return
         end
 
+<<<<<<< HEAD
+=======
+        refreshInitData()
+>>>>>>> upstream-1142/1.14.2
         ToggleNUIFocus(true, "dashboard")
         SendNUIMessage({
             action = "openAdminDashboard",
             data = {
                 players = res.players or {},
                 serverData = res.serverData,
+<<<<<<< HEAD
+=======
+                impounds = res.impounds,
+>>>>>>> upstream-1142/1.14.2
             },
         })
 
@@ -102,7 +121,11 @@ local function openDashboard(cb)
 end
 
 local function openAdminMenu(cb)
+<<<<<<< HEAD
     ESX.TriggerServerCallback("esx-adminmenu:server:canOpen", function(res)
+=======
+    xLib.callback("esx-adminmenu:server:canOpen", false, function(res)
+>>>>>>> upstream-1142/1.14.2
         if not res or not res.success then
             local err = getCallbackError(res, "You do not have permission to open the admin menu.")
             notifyClientError(err)
@@ -113,11 +136,19 @@ local function openAdminMenu(cb)
             return
         end
 
+<<<<<<< HEAD
+=======
+        refreshInitData()
+>>>>>>> upstream-1142/1.14.2
         ToggleNUIFocus(true, "menu")
         SendNUIMessage({
             action = "openAdminMenu",
             data = {
                 serverData = res.serverData,
+<<<<<<< HEAD
+=======
+                impounds = res.impounds,
+>>>>>>> upstream-1142/1.14.2
             },
         })
 
@@ -132,7 +163,11 @@ local function pushServerData()
         return
     end
 
+<<<<<<< HEAD
     ESX.TriggerServerCallback("esx-adminmenu:server:canOpen", function(res)
+=======
+    xLib.callback("esx-adminmenu:server:canOpen", false, function(res)
+>>>>>>> upstream-1142/1.14.2
         if not res or not res.success then
             return
         end
@@ -145,7 +180,11 @@ local function pushServerData()
 end
 
 local function checkAdminAction(action, cb)
+<<<<<<< HEAD
     ESX.TriggerServerCallback("esx-adminmenu:server:canUseAdminAction", cb, { action = action })
+=======
+    xLib.callback("esx-adminmenu:server:canUseAdminAction", false, cb, { action = action })
+>>>>>>> upstream-1142/1.14.2
 end
 
 local function runProtectedClientAction(cb, label, action, permissionAction)
@@ -282,7 +321,11 @@ end
 
 -- Bespoke closures: quick actions that emit extra menu state on success.
 RegisterNUICallback("adminMenu:revive", function(data, cb)
+<<<<<<< HEAD
     ESX.TriggerServerCallback("esx-adminmenu:server:selfAction", function(res)
+=======
+    xLib.callback("esx-adminmenu:server:selfAction", false, function(res)
+>>>>>>> upstream-1142/1.14.2
         if not res or not res.success then
             respondFailure(cb, "[esx-adminmenu:revive]", res)
             return
@@ -383,7 +426,12 @@ local function registerServerBridge(spec)
                 out[spec.collection] = coll
                 if spec.paging then
                     out.hasMore = res.hasMore == true
+<<<<<<< HEAD
                     out.nextOffset = res.nextOffset or #coll
+=======
+                    out.nextOffset = res.nextOffset
+                    out.nextCursor = res.nextCursor
+>>>>>>> upstream-1142/1.14.2
                     out.limit = res.limit
                 end
                 cb(out)
@@ -408,9 +456,15 @@ local function registerServerBridge(spec)
         end
 
         if spec.passData == false then
+<<<<<<< HEAD
             ESX.TriggerServerCallback(spec.event, handler)
         else
             ESX.TriggerServerCallback(spec.event, handler, data)
+=======
+            xLib.callback(spec.event, false, handler)
+        else
+            xLib.callback(spec.event, false, handler, data)
+>>>>>>> upstream-1142/1.14.2
         end
     end)
 end
@@ -591,6 +645,10 @@ RegisterNetEvent("esx-adminmenu:client:copyToClipboard", function(text)
 end)
 
 RegisterNetEvent("esx-adminmenu:client:open", function(data)
+<<<<<<< HEAD
+=======
+    refreshInitData()
+>>>>>>> upstream-1142/1.14.2
     ToggleNUIFocus(true, "dashboard")
     SendNUIMessage({
         action = "openAdminDashboard",
@@ -606,6 +664,10 @@ end)
 
 RegisterNetEvent("esx-adminmenu:client:openInformation", function(data)
     data = data or {}
+<<<<<<< HEAD
+=======
+    refreshInitData()
+>>>>>>> upstream-1142/1.14.2
     ToggleNUIFocus(true, "dashboard")
     SendNUIMessage({
         action = "openAdminDashboard",

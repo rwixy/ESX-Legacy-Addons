@@ -203,7 +203,11 @@ ESX.RegisterCommand(
 			plate = Helpers.generatePlate()
 		end
 
+<<<<<<< HEAD
 		ESX.TriggerClientCallback(xPlayer.source, "esx-adminmenu:client:adminCarVehicleProps", function(props)
+=======
+		xLib.callback("esx-adminmenu:client:adminCarVehicleProps", xPlayer.source, function(props)
+>>>>>>> upstream-1142/1.14.2
 			if not props or type(props) ~= "table" then
 				showError("Failed to get vehicle properties.")
 				return

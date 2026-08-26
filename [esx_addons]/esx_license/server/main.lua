@@ -83,7 +83,6 @@ local function isValidLicense(licenseType)
 	return flag
 end
 
-RegisterNetEvent('esx_license:addLicense')
 AddEventHandler('esx_license:addLicense', function(target, licenseType, cb)
 	local xPlayer = ESX.Player(target)
 	if xPlayer then
@@ -132,27 +131,27 @@ AddEventHandler('esx_license:getLicensesList', function(cb)
 	GetLicensesList(cb)
 end)
 
-ESX.RegisterServerCallback('esx_license:getLicense', function(source, cb, licenseType)
+xLib.callback.registerCompat('esx_license:getLicense', function(source, cb, licenseType)
 	local xPlayer = ESX.Player(source)
 	if xPlayer then
 		GetLicense(licenseType, cb)
 	end
 end)
 
-ESX.RegisterServerCallback('esx_license:getLicenses', function(source, cb, target)
+xLib.callback.registerCompat('esx_license:getLicenses', function(source, cb, target)
 	local xPlayer = ESX.Player(target)
 	if xPlayer then
 		GetLicenses(xPlayer.getIdentifier(), cb)
 	end
 end)
 
-ESX.RegisterServerCallback('esx_license:checkLicense', function(source, cb, target, licenseType)
+xLib.callback.registerCompat('esx_license:checkLicense', function(source, cb, target, licenseType)
 	local xPlayer = ESX.Player(target)
 	if xPlayer then
 		CheckLicense(xPlayer.getIdentifier(), licenseType, cb)
 	end
 end)
 
-ESX.RegisterServerCallback('esx_license:getLicensesList', function(source, cb)
+xLib.callback.registerCompat('esx_license:getLicensesList', function(source, cb)
 	GetLicensesList(cb)
 end)

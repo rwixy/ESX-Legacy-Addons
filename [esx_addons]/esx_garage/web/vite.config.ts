@@ -22,6 +22,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'static',
+<<<<<<< HEAD
+=======
+    emptyOutDir: false,
+>>>>>>> upstream-1142/1.14.2
     sourcemap: false,
     minify: 'esbuild',
 

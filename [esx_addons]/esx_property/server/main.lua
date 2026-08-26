@@ -28,6 +28,123 @@ end
 
 local PM = Config.PlayerManagement
 local Properties = {}
+local PropertyLocks = {}
+
+local function normalizePropertyId(propertyId)
+  local id = tonumber(propertyId)
+  if not id or id < 1 or id ~= math.floor(id) or not Properties[id] then
+    return nil
+  end
+
+  return id
+end
+
+local function normalizePlate(plate)
+  if type(plate) ~= "string" then
+    return nil
+  end
+
+  plate = plate:gsub("^%s+", ""):gsub("%s+$", "")
+  if plate == "" or #plate > 12 then
+    return nil
+  end
+
+  return plate
+end
+
+local function isNearCoords(source, coords, maxDistance)
+  if not coords or not coords.x or not coords.y or not coords.z then
+    return false
+  end
+
+  local ped = GetPlayerPed(source)
+  if not ped or ped == 0 then
+    return false
+  end
+
+  return #(GetEntityCoords(ped) - vector3(coords.x, coords.y, coords.z)) <= maxDistance
+end
+
+local function hasPropertyAccess(xPlayer, Property)
+  return xPlayer and Property and (Property.Owner == xPlayer.identifier or (Property.Keys and Property.Keys[xPlayer.identifier]))
+end
+
+local function canEnterProperty(xPlayer, Property)
+  if not xPlayer or not Property then
+    return false
+  end
+
+  if not Property.Owned then
+    return not Property.Locked
+  end
+
+  if Property.Locked then
+    return Config.OwnerCanAlwaysEnter and Property.Owner == xPlayer.identifier
+  end
+
+  return true
+end
+
+local function isRestoringLastProperty(xPlayer, PropertyId)
+  local lastProperty = xPlayer and xPlayer.get and xPlayer.get("lastProperty")
+  return lastProperty and tonumber(lastProperty.id) == PropertyId
+end
+
+local function isPlayerInsideProperty(player, Property)
+  if not Property or not Property.plysinside then
+    return false
+  end
+
+  for i = 1, #Property.plysinside do
+    if Property.plysinside[i] == player then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function isNearPropertyGarage(source, Property)
+  return Property and Property.garage and Property.garage.pos and isNearCoords(source, Property.garage.pos, 12.0)
+end
+
+local function isVehicleAlreadyStored(Property, plate)
+  if not Property or not Property.garage or not Property.garage.StoredVehicles then
+    return false
+  end
+
+  for i = 1, #Property.garage.StoredVehicles do
+    local vehicle = Property.garage.StoredVehicles[i]
+    if vehicle.vehicle and normalizePlate(vehicle.vehicle.plate) == plate then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function getPlayerVehicleForProps(source, vehicleProps)
+  local ped = GetPlayerPed(source)
+  if not ped or ped == 0 then
+    return nil
+  end
+
+  local vehicle = GetVehiclePedIsIn(ped, false)
+  if not vehicle or vehicle == 0 then
+    return nil
+  end
+
+  if normalizePlate(GetVehicleNumberPlateText(vehicle) or "") ~= vehicleProps.plate then
+    return nil
+  end
+
+  local model = tonumber(vehicleProps.model)
+  if not model or GetEntityModel(vehicle) ~= model then
+    return nil
+  end
+
+  return vehicle
+end
 
 function PropertiesRefresh()
   Properties = {}
@@ -182,42 +299,62 @@ ESX.RegisterCommand(_("admin_name"), Config.AllowedGroups, function(xPlayer)
 end, false,{help = TranslateCap("admin_desc")})
 
 -- Buy Property
-ESX.RegisterServerCallback("esx_property:buyProperty", function(source, cb, PropertyId)
-    local xPlayer = ESX.GetPlayerFromId(source)
-    local Price = Properties[PropertyId].Price
-    local canAfford = xPlayer.getAccount("bank").money >= Price
+xLib.callback.registerCompat("esx_property:buyProperty", function(source, cb, PropertyId)
+  local xPlayer = ESX.GetPlayerFromId(source)
+  PropertyId = normalizePropertyId(PropertyId)
+  local Property = PropertyId and Properties[PropertyId]
 
-    if canAfford then
-        xPlayer.removeAccountMoney("bank", Price, "Bought Property")
-        Properties[PropertyId].Owner = xPlayer.identifier
-        Properties[PropertyId].OwnerName = xPlayer.getName()
-        Properties[PropertyId].Owned = true
+  if not xPlayer or not Property or PM.Enabled or Property.Owned or PropertyLocks[PropertyId] or not isNearCoords(source, Property.Entrance, 6.0) then
+    return cb(false)
+  end
 
-        Log("Property Bought", 65280, {{
-            name = "**Property Name**",
-            value = Properties[PropertyId].Name,
-            inline = true
-        }, {
-            name = "**Price**",
-            value = ESX.Math.GroupDigits(Price),
-            inline = true
-        }, {
-            name = "**Player**",
-            value = xPlayer.getName(),
-            inline = true
-        }}, 1)
+  local Price = tonumber(Property.Price)
+  if not Price or Price <= 0 then
+    return cb(false)
+  end
 
-        TriggerClientEvent("esx_property:syncProperties", -1, Properties)
+  local canAfford = xPlayer.getAccount("bank").money >= Price
+  if not canAfford then
+    return cb(false)
+  end
 
-        if Config.OxInventory then
-            exports.ox_inventory:RegisterStash("property-" .. PropertyId, Properties[PropertyId].Name, 15, 100000, xPlayer.identifier)
-        end
-    end
+  PropertyLocks[PropertyId] = true
+  if Property.Owned then
+    PropertyLocks[PropertyId] = nil
+    return cb(false)
+  end
 
-    cb(canAfford)
+  xPlayer.removeAccountMoney("bank", Price, "Bought Property")
+  Property.Owner = xPlayer.identifier
+  Property.OwnerName = xPlayer.getName()
+  Property.Owned = true
+  Property.Keys = Property.Keys or {}
+
+  Log("Property Bought", 65280, {{
+      name = "**Property Name**",
+      value = Property.Name,
+      inline = true
+  }, {
+      name = "**Price**",
+      value = ESX.Math.GroupDigits(Price),
+      inline = true
+  }, {
+      name = "**Player**",
+      value = xPlayer.getName(),
+      inline = true
+  }}, 1)
+
+  TriggerClientEvent("esx_property:syncProperties", -1, Properties)
+
+  if Config.OxInventory then
+      exports.ox_inventory:RegisterStash("property-" .. PropertyId, Property.Name, 15, 100000, xPlayer.identifier)
+  end
+
+  PropertyLocks[PropertyId] = nil
+  cb(true)
 end)
 
-ESX.RegisterServerCallback("esx_property:attemptSellToPlayer", function(source, cb, PropertyId, PlayerId)
+xLib.callback.registerCompat("esx_property:attemptSellToPlayer", function(source, cb, PropertyId, PlayerId)
   local xPlayer = ESX.GetPlayerFromId(source)
   local xTarget = ESX.GetPlayerFromId(PlayerId)
   local Price = Properties[PropertyId].Price
@@ -247,7 +384,7 @@ ESX.RegisterServerCallback("esx_property:attemptSellToPlayer", function(source, 
 end)
 
 -- Buy Property
-ESX.RegisterServerCallback("esx_property:buyFurniture", function(source, cb, PropertyId, PropName, PropIndex, PropCatagory, pos, heading)
+xLib.callback.registerCompat("esx_property:buyFurniture", function(source, cb, PropertyId, PropName, PropIndex, PropCatagory, pos, heading)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   if xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]) then
@@ -282,7 +419,7 @@ end)
 
 -- Selling Property
 
-ESX.RegisterServerCallback("esx_property:sellProperty", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:sellProperty", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   if xPlayer.identifier == Owner then
@@ -319,7 +456,7 @@ end)
 
 -- Admin Menu Options
 
-ESX.RegisterServerCallback("esx_property:toggleLock", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:toggleLock", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   if xPlayer.identifier == Owner or IsPlayerAdmin(source, "ToggleLock") or
@@ -335,7 +472,7 @@ ESX.RegisterServerCallback("esx_property:toggleLock", function(source, cb, Prope
        (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback("esx_property:toggleGarage", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:toggleGarage", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "ToggleGarage") then
     Properties[PropertyId].garage.enabled = not Properties[PropertyId].garage.enabled
@@ -351,7 +488,7 @@ ESX.RegisterServerCallback("esx_property:toggleGarage", function(source, cb, Pro
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:toggleCCTV", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:toggleCCTV", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "ToggleCCTV") then
     Properties[PropertyId].cctv.enabled = not Properties[PropertyId].cctv.enabled
@@ -367,7 +504,7 @@ ESX.RegisterServerCallback("esx_property:toggleCCTV", function(source, cb, Prope
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:SetGaragePos", function(source, cb, PropertyId, heading)
+xLib.callback.registerCompat("esx_property:SetGaragePos", function(source, cb, PropertyId, heading)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "ToggleGarage") then
     local PlayerPed = GetPlayerPed(source)
@@ -388,7 +525,7 @@ ESX.RegisterServerCallback("esx_property:SetGaragePos", function(source, cb, Pro
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:SetCCTVangle", function(source, cb, PropertyId, angles)
+xLib.callback.registerCompat("esx_property:SetCCTVangle", function(source, cb, PropertyId, angles)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "ToggleCCTV") then
     local Property = Properties[PropertyId]
@@ -405,7 +542,7 @@ ESX.RegisterServerCallback("esx_property:SetCCTVangle", function(source, cb, Pro
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:CCTV", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:CCTV", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   local Property = Properties[PropertyId]
@@ -418,7 +555,7 @@ ESX.RegisterServerCallback("esx_property:CCTV", function(source, cb, PropertyId)
   cb(xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback("esx_property:ExitCCTV", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:ExitCCTV", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   local Property = Properties[PropertyId]
@@ -436,7 +573,7 @@ ESX.RegisterServerCallback("esx_property:ExitCCTV", function(source, cb, Propert
   cb(xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback("esx_property:SetPropertyName", function(source, cb, PropertyId, name)
+xLib.callback.registerCompat("esx_property:SetPropertyName", function(source, cb, PropertyId, name)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   local Property = Properties[PropertyId]
@@ -452,7 +589,7 @@ ESX.RegisterServerCallback("esx_property:SetPropertyName", function(source, cb, 
   cb((xPlayer.identifier == Owner or IsPlayerAdmin(source, "SetPropertyName")) and name and #name <= Config.MaxNameLength)
 end)
 
-ESX.RegisterServerCallback("esx_property:KnockOnDoor", function(source, cb, PropertyId, name)
+xLib.callback.registerCompat("esx_property:KnockOnDoor", function(source, cb, PropertyId, name)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Property = Properties[PropertyId]
   local Owner = ESX.GetPlayerFromIdentifier(Property.Owner)
@@ -472,7 +609,7 @@ ESX.RegisterServerCallback("esx_property:KnockOnDoor", function(source, cb, Prop
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:RemoveCustomName", function(source, cb, PropertyId, name)
+xLib.callback.registerCompat("esx_property:RemoveCustomName", function(source, cb, PropertyId, name)
   local Property = Properties[PropertyId]
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "RemovePropertyName") then
@@ -489,7 +626,7 @@ ESX.RegisterServerCallback("esx_property:RemoveCustomName", function(source, cb,
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:deleteProperty", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:deleteProperty", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "DeleteProperty") then
     Log("Property Deleted", 16711680,
@@ -507,7 +644,7 @@ ESX.RegisterServerCallback("esx_property:deleteProperty", function(source, cb, P
   cb(IsPlayerAdmin(source, "DeleteProperty"))
 end)
 
-ESX.RegisterServerCallback("esx_property:ChangePrice", function(source, cb, PropertyId, NewPrice)
+xLib.callback.registerCompat("esx_property:ChangePrice", function(source, cb, PropertyId, NewPrice)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "SetPropertyPrice") then
     local Original = Properties[PropertyId].Price
@@ -521,7 +658,7 @@ ESX.RegisterServerCallback("esx_property:ChangePrice", function(source, cb, Prop
   cb(IsPlayerAdmin(source, "SetPropertyPrice"))
 end)
 
-ESX.RegisterServerCallback("esx_property:ChangeInterior", function(source, cb, PropertyId, Interior)
+xLib.callback.registerCompat("esx_property:ChangeInterior", function(source, cb, PropertyId, Interior)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "ChangeInterior") then
     local Original = GetInteriorValues(Properties[PropertyId].Interior).label
@@ -540,7 +677,7 @@ ESX.RegisterServerCallback("esx_property:ChangeInterior", function(source, cb, P
   cb(IsPlayerAdmin(source, "ChangeInterior"))
 end)
 
-ESX.RegisterServerCallback("esx_property:RemoveAllfurniture", function(source, cb, PropertyId)
+xLib.callback.registerCompat("esx_property:RemoveAllfurniture", function(source, cb, PropertyId)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   if xPlayer.identifier == Owner or IsPlayerAdmin(source, "ResetFurniture") or
@@ -559,7 +696,7 @@ ESX.RegisterServerCallback("esx_property:RemoveAllfurniture", function(source, c
        (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback("esx_property:deleteFurniture", function(source, cb, PropertyId, furnitureIndex)
+xLib.callback.registerCompat("esx_property:deleteFurniture", function(source, cb, PropertyId, furnitureIndex)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   if xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]) then
@@ -577,7 +714,7 @@ ESX.RegisterServerCallback("esx_property:deleteFurniture", function(source, cb, 
   cb(xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback("esx_property:editFurniture", function(source, cb, PropertyId, furnitureIndex, Pos, Heading)
+xLib.callback.registerCompat("esx_property:editFurniture", function(source, cb, PropertyId, furnitureIndex, Pos, Heading)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Owner = Properties[PropertyId].Owner
   if xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]) then
@@ -593,7 +730,7 @@ ESX.RegisterServerCallback("esx_property:editFurniture", function(source, cb, Pr
   cb(xPlayer.identifier == Owner or IsPlayerAdmin(source) or (Properties[PropertyId].Keys and Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback("esx_property:evictOwner", function(source, cb, PropertyId, Interior)
+xLib.callback.registerCompat("esx_property:evictOwner", function(source, cb, PropertyId, Interior)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "EvictOwner") then
     local xOwner = ESX.GetPlayerFromIdentifier(Properties[PropertyId].Owner)
@@ -626,7 +763,7 @@ ESX.RegisterServerCallback("esx_property:evictOwner", function(source, cb, Prope
   cb(IsPlayerAdmin(source, "EvictOwner"))
 end)
 
-ESX.RegisterServerCallback("esx_property:CanRaid", function(source, cb, PropertyId, Interior)
+xLib.callback.registerCompat("esx_property:CanRaid", function(source, cb, PropertyId, Interior)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Can = false
   if Config.Raiding.Enabled then
@@ -658,7 +795,7 @@ ESX.RegisterServerCallback("esx_property:CanRaid", function(source, cb, Property
   end
 end)
 
-ESX.RegisterServerCallback("esx_property:ChangeEntrance", function(source, cb, PropertyId, Coords)
+xLib.callback.registerCompat("esx_property:ChangeEntrance", function(source, cb, PropertyId, Coords)
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "ChangeEntrance") then
     local Origonal = Properties[PropertyId].Entrance.x .. "," .. Properties[PropertyId].Entrance.y .. "," .. Properties[PropertyId].Entrance.z
@@ -676,7 +813,7 @@ ESX.RegisterServerCallback("esx_property:ChangeEntrance", function(source, cb, P
   cb(IsPlayerAdmin(source, "ChangeEntrance"))
 end)
 
-ESX.RegisterServerCallback("esx_property:SetInventoryPosition", function(source, cb, PropertyId, Coords, Reset)
+xLib.callback.registerCompat("esx_property:SetInventoryPosition", function(source, cb, PropertyId, Coords, Reset)
   if Config.OxInventory then
     local Property = Properties[PropertyId]
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -706,7 +843,7 @@ ESX.RegisterServerCallback("esx_property:SetInventoryPosition", function(source,
   end
 end)
 -- Wardrobe
-ESX.RegisterServerCallback("esx_property:SetWardrobePosition", function(source, cb, PropertyId, Coords, Reset)
+xLib.callback.registerCompat("esx_property:SetWardrobePosition", function(source, cb, PropertyId, Coords, Reset)
   local Property = Properties[PropertyId]
   local xPlayer = ESX.GetPlayerFromId(source)
   if IsPlayerAdmin(source, "EditInteriorPositions") or (Property.Owner == xPlayer.identifier or Properties[PropertyId].Keys[xPlayer.identifier]) then
@@ -732,7 +869,7 @@ ESX.RegisterServerCallback("esx_property:SetWardrobePosition", function(source, 
   cb(IsPlayerAdmin(source, "EditInteriorPositions") or (Property.Owner == xPlayer.identifier or Properties[PropertyId].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback('esx_property:getPlayerDressing', function(source, cb)
+xLib.callback.registerCompat('esx_property:getPlayerDressing', function(source, cb)
   local xPlayer = ESX.GetPlayerFromId(source)
 
   TriggerEvent('esx_datastore:getDataStore', 'property', xPlayer.identifier, function(store)
@@ -748,7 +885,7 @@ ESX.RegisterServerCallback('esx_property:getPlayerDressing', function(source, cb
   end)
 end)
 
-ESX.RegisterServerCallback('esx_property:GetInsidePlayers', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:GetInsidePlayers', function(source, cb, property)
   local Property = Properties[property]
   local Players = {}
   local xPlayer = ESX.GetPlayerFromId(source)
@@ -766,11 +903,11 @@ ESX.RegisterServerCallback('esx_property:GetInsidePlayers', function(source, cb,
   cb(Players)
 end)
 
-ESX.RegisterServerCallback('esx_property:GetNearbyPlayers', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:GetNearbyPlayers', function(source, cb, property)
   local Property = Properties[property]
   local Players = {}
   local xPlayer = ESX.GetPlayerFromId(source)
-  local NearbyPlayers = ESX.OneSync.GetPlayersInArea(vector3(Property.Entrance.x, Property.Entrance.y, Property.Entrance.z), 5.0)
+  local NearbyPlayers = xLib.onesync.getPlayersInArea(vector3(Property.Entrance.x, Property.Entrance.y, Property.Entrance.z), 5.0)
   Wait(100)
     for k, v in pairs(NearbyPlayers) do
       local xTarget = ESX.GetPlayerFromId(v.id)
@@ -781,7 +918,7 @@ ESX.RegisterServerCallback('esx_property:GetNearbyPlayers', function(source, cb,
     cb(Players)
 end)
 
-ESX.RegisterServerCallback('esx_property:GetPlayersWithKeys', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:GetPlayersWithKeys', function(source, cb, property)
   local Property = Properties[property]
   local Players = {}
   local xPlayer = ESX.GetPlayerFromId(source)
@@ -790,16 +927,16 @@ ESX.RegisterServerCallback('esx_property:GetPlayersWithKeys', function(source, c
   end
 end)
 
-ESX.RegisterServerCallback('esx_property:ShouldHaveKey', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:ShouldHaveKey', function(source, cb, property)
   local xPlayer = ESX.GetPlayerFromId(source)
   cb(Properties[property].Keys[xPlayer.identifier])
 end)
 
-ESX.RegisterServerCallback('esx_property:GetWebhook', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:GetWebhook', function(source, cb, property)
   cb(Config.CCTV.PictureWebook)
 end)
 
-ESX.RegisterServerCallback('esx_property:RemoveLastProperty', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:RemoveLastProperty', function(source, cb, property)
   local xPlayer = ESX.GetPlayerFromId(source)
   MySQL.query("UPDATE `users` SET `last_property` = NULL WHERE `identifier` = ?", {xPlayer.identifier}) -- Remove Saved Data
   SetPlayerRoutingBucket(source, 0) -- Reset Routing Bucket
@@ -807,7 +944,7 @@ ESX.RegisterServerCallback('esx_property:RemoveLastProperty', function(source, c
   cb()
 end)
 
-ESX.RegisterServerCallback('esx_property:GiveKey', function(source, cb, property, player)
+xLib.callback.registerCompat('esx_property:GiveKey', function(source, cb, property, player)
   local xPlayer = ESX.GetPlayerFromId(source)
   local xTarget = ESX.GetPlayerFromId(player)
   local Property = Properties[property]
@@ -837,58 +974,87 @@ ESX.RegisterServerCallback('esx_property:GiveKey', function(source, cb, property
      {name = "**Has Access**", value = Property.Owner == xPlayer.identifier and "Yes" or "No", inline = true}}, 1)
 end)
 
-ESX.RegisterServerCallback('esx_property:StoreVehicle', function(source, cb, PropertyId, VehicleProperties)
+xLib.callback.registerCompat('esx_property:StoreVehicle', function(source, cb, PropertyId, VehicleProperties)
   local xPlayer = ESX.GetPlayerFromId(source)
+  PropertyId = normalizePropertyId(PropertyId)
   local Property = Properties[PropertyId]
 
-  if Property.Owner == xPlayer.identifier or Properties[PropertyId].Keys[xPlayer.identifier] then
-    if Property.garage.enabled then
-      if Config.Garage.OwnedVehiclesOnly then
-        MySQL.scalar("SELECT `owner` FROM `owned_vehicles` WHERE `plate` = ?", {VehicleProperties.plate}, function(result)
-          if result then
-            if result == xPlayer.identifier then
-              Properties[PropertyId].garage.StoredVehicles[#Properties[PropertyId].garage.StoredVehicles + 1] = {owner = xPlayer.identifier,
-                                                                                                                 vehicle = VehicleProperties}
-              cb(true)
-            elseif (Properties[PropertyId].Keys[result] or Property.Owner == result) then
-              Properties[PropertyId].garage.StoredVehicles[#Properties[PropertyId].garage.StoredVehicles + 1] = {owner = xPlayer.identifier,
-                                                                                                                 vehicle = VehicleProperties}
-              cb(true)
-            else
-              cb(false)
-            end
-          else
-            cb(false)
-          end
-        end)
-      else
-        Properties[PropertyId].garage.StoredVehicles[#Properties[PropertyId].garage.StoredVehicles + 1] = {owner = xPlayer.identifier,
-                                                                                                           vehicle = VehicleProperties}
-        cb(true)
-      end
-      MySQL.query(Config.Garage.MySQLquery, {1, VehicleProperties.plate}) -- Set vehicle as stored in MySQL
-    else
-      xPlayer.showNotification(TranslateCap("garage_not_enabled"), 'error')
-      cb(false)
-    end
-  else
-    xPlayer.showNotification(TranslateCap("cannot_access_property"), 'error')
-    cb(false)
+  if not xPlayer or not Property or type(VehicleProperties) ~= "table" then
+    return cb(false)
   end
-  Log("User Attempted To Store Vehicle", 3640511,
-    {{name = "**Property Name**", value = Property.Name, inline = true}, {name = "**Owner**", value = Property.OwnerName, inline = true},
-     {name = "**Player**", value = xPlayer.getName(), inline = true},
-     {name = "**Has Access**", value = (Property.Owner == xPlayer.identifier or Properties[PropertyId].Keys[xPlayer.identifier]) and "Yes" or "No",
-      inline = true}, {name = "**Garage Status**", value = Property.garage.enabled and "Enabled" or "Disabled", inline = true},
-     {name = "**Vehicle Name**", value = VehicleProperties.DisplayName, inline = true}}, 2)
+
+  VehicleProperties.plate = normalizePlate(VehicleProperties.plate)
+  if not VehicleProperties.plate or not VehicleProperties.model or not getPlayerVehicleForProps(source, VehicleProperties) then
+    return cb(false)
+  end
+
+  if not hasPropertyAccess(xPlayer, Property) then
+    xPlayer.showNotification(TranslateCap("cannot_access_property"), 'error')
+    return cb(false)
+  end
+
+  if not Property.garage or not Property.garage.enabled or not isNearPropertyGarage(source, Property) then
+    xPlayer.showNotification(TranslateCap("garage_not_enabled"), 'error')
+    return cb(false)
+  end
+
+  if isVehicleAlreadyStored(Property, VehicleProperties.plate) then
+    return cb(false)
+  end
+
+  local function finishStore(owner)
+    Properties[PropertyId].garage.StoredVehicles[#Properties[PropertyId].garage.StoredVehicles + 1] = {
+      owner = owner,
+      vehicle = VehicleProperties
+    }
+
+    TriggerClientEvent("esx_property:syncProperties", -1, Properties)
+    Log("User Attempted To Store Vehicle", 3640511,
+      {{name = "**Property Name**", value = Property.Name, inline = true}, {name = "**Owner**", value = Property.OwnerName, inline = true},
+       {name = "**Player**", value = xPlayer.getName(), inline = true},
+       {name = "**Has Access**", value = hasPropertyAccess(xPlayer, Property) and "Yes" or "No",
+        inline = true}, {name = "**Garage Status**", value = Property.garage.enabled and "Enabled" or "Disabled", inline = true},
+       {name = "**Vehicle Name**", value = VehicleProperties.DisplayName, inline = true}}, 2)
+  end
+
+  if Config.Garage.OwnedVehiclesOnly then
+    MySQL.single("SELECT `owner`, `vehicle` FROM `owned_vehicles` WHERE `plate` = ?", {VehicleProperties.plate}, function(result)
+      if not result or not (result.owner == xPlayer.identifier or result.owner == Property.Owner or (Property.Keys and Property.Keys[result.owner])) then
+        return cb(false)
+      end
+
+      local storedVehicle = result.vehicle and json.decode(result.vehicle)
+      if storedVehicle and tonumber(storedVehicle.model) and tonumber(storedVehicle.model) ~= tonumber(VehicleProperties.model) then
+        return cb(false)
+      end
+
+      MySQL.update("UPDATE `owned_vehicles` SET `stored` = ? WHERE `plate` = ? AND `owner` = ?", {1, VehicleProperties.plate, result.owner}, function(rowsChanged)
+        if rowsChanged and rowsChanged > 0 then
+          finishStore(result.owner)
+          return cb(true)
+        end
+
+        cb(false)
+      end)
+    end)
+  else
+    finishStore(xPlayer.identifier)
+    MySQL.query(Config.Garage.MySQLquery, {1, VehicleProperties.plate})
+    cb(true)
+  end
 end)
 
-ESX.RegisterServerCallback('esx_property:AccessGarage', function(source, cb, PropertyId, VehicleProperties)
+xLib.callback.registerCompat('esx_property:AccessGarage', function(source, cb, PropertyId, VehicleProperties)
   local xPlayer = ESX.GetPlayerFromId(source)
+  PropertyId = normalizePropertyId(PropertyId)
   local Property = Properties[PropertyId]
 
-  if Property.Owner == xPlayer.identifier or Properties[PropertyId].Keys[xPlayer.identifier] then
-    if Property.garage.enabled then
+  if not xPlayer or not Property then
+    return cb(false)
+  end
+
+  if hasPropertyAccess(xPlayer, Property) then
+    if Property.garage and Property.garage.enabled and isNearPropertyGarage(source, Property) then
       cb(Property.garage.StoredVehicles)
     else
       xPlayer.showNotification(TranslateCap("garage_not_enabled"), 'error')
@@ -905,7 +1071,7 @@ ESX.RegisterServerCallback('esx_property:AccessGarage', function(source, cb, Pro
      {name = "**Garage Status**", value = Property.garage.enabled and "Enabled" or "Disabled", inline = true}}, 2)
 end)
 
-ESX.RegisterServerCallback('esx_property:RemoveKey', function(source, cb, property, player)
+xLib.callback.registerCompat('esx_property:RemoveKey', function(source, cb, property, player)
   local xPlayer = ESX.GetPlayerFromId(source)
   local xTarget = ESX.GetPlayerFromIdentifier(player)
   local Property = Properties[property]
@@ -933,13 +1099,13 @@ ESX.RegisterServerCallback('esx_property:RemoveKey', function(source, cb, proper
   end
 end)
 
-ESX.RegisterServerCallback('esx_property:CanOpenFurniture', function(source, cb, property)
+xLib.callback.registerCompat('esx_property:CanOpenFurniture', function(source, cb, property)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Property = Properties[property]
   cb(Property.Owner == xPlayer.identifier or (Property.Keys and Properties[property].Keys[xPlayer.identifier]))
 end)
 
-ESX.RegisterServerCallback('esx_property:getPlayerOutfit', function(source, cb, num)
+xLib.callback.registerCompat('esx_property:getPlayerOutfit', function(source, cb, num)
   local xPlayer = ESX.GetPlayerFromId(source)
 
   TriggerEvent('esx_datastore:getDataStore', 'property', xPlayer.identifier, function(store)
@@ -950,7 +1116,7 @@ end)
 
 -- Player Management
 if PM.Enabled then
-  ESX.RegisterServerCallback('esx_property:PMenterOffice', function(source, cb)
+  xLib.callback.registerCompat('esx_property:PMenterOffice', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     local PlayerPed = GetPlayerPed(source)
 
@@ -963,7 +1129,7 @@ if PM.Enabled then
     end
   end)
 
-  ESX.RegisterServerCallback('esx_property:PMexitOffice', function(source, cb)
+  xLib.callback.registerCompat('esx_property:PMexitOffice', function(source, cb)
     local xPlayer = ESX.GetPlayerFromId(source)
     local PlayerPed = GetPlayerPed(source)
 
@@ -983,12 +1149,23 @@ RegisterNetEvent('esx_property:enter', function(PropertyId)
   local player = source
   local PlayerPed = GetPlayerPed(player)
   local xPlayer = ESX.GetPlayerFromId(player)
+  PropertyId = normalizePropertyId(PropertyId)
   local Property = Properties[PropertyId]
+  if not xPlayer or not Property or not canEnterProperty(xPlayer, Property) then
+    return
+  end
+
+  if not isRestoringLastProperty(xPlayer, PropertyId) and not isNearCoords(player, Property.Entrance, 6.0) then
+    return
+  end
+
   local Interior = GetInteriorValues(Property.Interior)
   if not Properties[PropertyId].plysinside then
     Properties[PropertyId].plysinside = {}
   end
-  table.insert(Properties[PropertyId].plysinside, player)
+  if not isPlayerInsideProperty(player, Property) then
+    table.insert(Properties[PropertyId].plysinside, player)
+  end
 
   local PropertyData = {id = PropertyId, coords = Property.Entrance} -- Save the property data to the table
   MySQL.query("UPDATE `users` SET `last_property` = ? WHERE `identifier` = ?", {json.encode(PropertyData), xPlayer.identifier}) -- Save the property data to the database
@@ -1008,12 +1185,18 @@ end)
 
 RegisterNetEvent('esx_property:leave', function(PropertyId)
   local player = source
+  PropertyId = normalizePropertyId(PropertyId)
   local Property = Properties[PropertyId]
   local xPlayer = ESX.GetPlayerFromId(player)
+  if not xPlayer or not Property or not isPlayerInsideProperty(player, Property) then
+    return
+  end
+
   MySQL.query("UPDATE `users` SET `last_property` = NULL WHERE `identifier` = ?", {xPlayer.identifier}) -- Remove Saved Data
   xPlayer.set("lastProperty", nil)
-  SetEntityCoords(player, vector3(Property.Entrance.x, Property.Entrance.y, Property.Entrance.z))
-  SetEntityHeading(player, 0.0)
+  local PlayerPed = GetPlayerPed(player)
+  SetEntityCoords(PlayerPed, vector3(Property.Entrance.x, Property.Entrance.y, Property.Entrance.z))
+  SetEntityHeading(PlayerPed, 0.0)
   SetPlayerRoutingBucket(player, 0)
   for i = 1, #(Properties[PropertyId].plysinside) do
     if Properties[PropertyId].plysinside[i] == player then
@@ -1028,10 +1211,37 @@ RegisterNetEvent('esx_property:leave', function(PropertyId)
 end)
 
 RegisterNetEvent('esx_property:SetVehicleOut', function(PropertyId, VehIndex)
-  local VehicleData = Properties[PropertyId].garage.StoredVehicles[VehIndex]
-  local plate = VehicleData.vehicle.plate
+  local player = source
+  local xPlayer = ESX.GetPlayerFromId(player)
+  PropertyId = normalizePropertyId(PropertyId)
+  VehIndex = tonumber(VehIndex)
+
+  if not xPlayer or not PropertyId or not VehIndex or VehIndex ~= math.floor(VehIndex) then
+    return
+  end
+
+  local Property = Properties[PropertyId]
+  if not hasPropertyAccess(xPlayer, Property) or not Property.garage or not Property.garage.enabled or not isNearPropertyGarage(player, Property) then
+    return
+  end
+
+  local VehicleData = Property.garage.StoredVehicles[VehIndex]
+  if not VehicleData or type(VehicleData.vehicle) ~= "table" then
+    return
+  end
+
+  local plate = normalizePlate(VehicleData.vehicle.plate)
+  if not plate then
+    return
+  end
+
   table.remove(Properties[PropertyId].garage.StoredVehicles, VehIndex)
-  MySQL.query(Config.Garage.MySQLquery, {0, plate}) -- Set vehicle as no longer stored
+  TriggerClientEvent("esx_property:syncProperties", -1, Properties)
+  if VehicleData.owner then
+    MySQL.update("UPDATE `owned_vehicles` SET `stored` = ? WHERE `plate` = ? AND `owner` = ?", {0, plate, VehicleData.owner})
+  else
+    MySQL.query(Config.Garage.MySQLquery, {0, plate}) -- Set vehicle as no longer stored
+  end
 end)
 
 
@@ -1047,7 +1257,7 @@ AddEventHandler('playerDropped', function()
   end
 end)
 
-ESX.RegisterServerCallback('esx_property:CanCreateProperty', function(source, cb)
+xLib.callback.registerCompat('esx_property:CanCreateProperty', function(source, cb)
   local Re = false
   local xPlayer = ESX.GetPlayerFromId(source)
 
@@ -1060,11 +1270,11 @@ ESX.RegisterServerCallback('esx_property:CanCreateProperty', function(source, cb
   cb(Re)
 end)
 
-ESX.RegisterServerCallback('esx_property:IsAdmin', function(source, cb)
+xLib.callback.registerCompat('esx_property:IsAdmin', function(source, cb)
   cb(IsPlayerAdmin(source, "ViewProperties"))
 end)
 
-ESX.RegisterServerCallback('esx_property:CanAccessRealEstateMenu', function(source, cb)
+xLib.callback.registerCompat('esx_property:CanAccessRealEstateMenu', function(source, cb)
   local xPlayer = ESX.GetPlayerFromId(source)
   local Re = (Config.PlayerManagement.Enabled and xPlayer.job.name == Config.PlayerManagement.job and xPlayer.job.grade >= Config.PlayerManagement.Permissions.ManagePropertiesFromQuickActions) and true or false
   cb(Re)

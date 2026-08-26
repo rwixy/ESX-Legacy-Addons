@@ -7,6 +7,10 @@ description("ESX Admin Menu")
 version("0.3.2")
 
 shared_scripts({
+<<<<<<< HEAD
+=======
+	"@esx_lib/imports.lua",
+>>>>>>> upstream-1142/1.14.2
 	"@es_extended/imports.lua",
 	"@es_extended/locale.lua",
 	"locales/*.lua",

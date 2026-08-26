@@ -14,7 +14,18 @@
 	let impoundOpen: boolean = $state(false);
 	let selectedImpound: string | null = $state(null);
 
+<<<<<<< HEAD
 	const impoundNames = $derived(Object.keys(uiState.impounds ?? {}));
+=======
+	const impoundOptions = $derived(
+		Object.entries(uiState.impounds ?? {}).map(([id, impound]) => ({
+			id,
+			label: impound.label ?? id,
+		}))
+	);
+	const selectedImpoundOption = $derived(impoundOptions.find((impound) => impound.id === selectedImpound) ?? impoundOptions[0] ?? null);
+	const selectedImpoundLabel = $derived(selectedImpoundOption ? selectedImpoundOption.label : t("select_impound"));
+>>>>>>> upstream-1142/1.14.2
 
 	let openedAt = $state<number | null>(null);
 
@@ -26,6 +37,16 @@
 		}
 	});
 
+<<<<<<< HEAD
+=======
+	$effect(() => {
+		if (!open || confirmType !== "impound_vehicle") return;
+		if (selectedImpound && impoundOptions.some((impound) => impound.id === selectedImpound)) return;
+
+		selectedImpound = impoundOptions[0]?.id ?? null;
+	});
+
+>>>>>>> upstream-1142/1.14.2
 	let newDate: string = $state("");
 	let reason: string = $state("");
 	let textValue: string = $state("");
@@ -74,9 +95,16 @@
 		}
 
 		if (confirmType === "impound_vehicle") {
+<<<<<<< HEAD
 			if (!selectedImpound) return;
 
 			onConfirm({ impoundName: selectedImpound });
+=======
+			const impoundName = selectedImpoundOption?.id ?? null;
+			if (!impoundName) return;
+
+			onConfirm({ impoundName });
+>>>>>>> upstream-1142/1.14.2
 			reset();
 			return;
 		}
@@ -242,7 +270,11 @@
 
 						<div class="confirm-dropdown lg-dropdown" role="presentation" onclick={stopPropagation} onkeydown={stopPropagation}>
 							<button type="button" tabindex="-1" class="confirm-dropdown-trigger" aria-expanded={impoundOpen} onclick={toggleImpound}>
+<<<<<<< HEAD
 								<span>{selectedImpound ?? t("select_impound")}</span>
+=======
+								<span>{selectedImpoundLabel}</span>
+>>>>>>> upstream-1142/1.14.2
 
 								<svg class="confirm-dropdown-arrow" class:open={impoundOpen} viewBox="0 0 11 10">
 									<path
@@ -253,6 +285,7 @@
 							</button>
 
 							<div class="confirm-dropdown-menu" class:open={impoundOpen} tabindex="-1">
+<<<<<<< HEAD
 								{#each impoundNames as name}
 									<button
 										type="button"
@@ -265,6 +298,20 @@
 										}}
 									>
 										{name}
+=======
+								{#each impoundOptions as impound}
+									<button
+										type="button"
+										class="confirm-dropdown-item"
+										class:selected={impound.id === selectedImpound}
+										tabindex="-1"
+										onclick={(e) => {
+											e.preventDefault();
+											selectImpound(impound.id);
+										}}
+									>
+										{impound.label}
+>>>>>>> upstream-1142/1.14.2
 									</button>
 								{/each}
 							</div>

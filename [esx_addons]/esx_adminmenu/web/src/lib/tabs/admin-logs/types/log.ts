@@ -28,5 +28,9 @@ export interface AdminLogFilters {
 	namespace?: string;
 	days?: number;
 	limit?: number;
+<<<<<<< HEAD
 	offset?: number;
+=======
+	beforeId?: number;
+>>>>>>> upstream-1142/1.14.2
 }

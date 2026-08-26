@@ -1,5 +1,6 @@
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
   "name": "web",
   "private": true,
   "version": "1.0.0",
@@ -17,6 +18,8 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "vite": "^7.1.7"
 =======
+=======
+>>>>>>> upstream-1142/1.14.2
   "name": "esx_garages",
   "private": true,
   "version": "0.0.0",
@@ -71,6 +74,9 @@
     "typescript-eslint": "^8.43.0",
     "vite": "^7.1.6",
     "vitest": "^3.2.4"
+<<<<<<< HEAD
 >>>>>>> 582fbc7 (merge esx_garage to 1.14.1 branch)
+=======
+>>>>>>> upstream-1142/1.14.2
   }
 }

@@ -35,6 +35,10 @@ export type NuiEventType = typeof NuiEventType[keyof typeof NuiEventType];
 
 // NUI Callback Types
 export const NuiCallbackType = {
+<<<<<<< HEAD
+=======
+  GET_VEHICLES: 'garage:getVehicles',
+>>>>>>> upstream-1142/1.14.2
   RETRIEVE_VEHICLE: 'garage:retrieveVehicle',
   STORE_VEHICLE: 'garage:storeVehicle',
   RENAME_VEHICLE: 'garage:renameVehicle',

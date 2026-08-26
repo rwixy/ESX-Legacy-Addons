@@ -21,6 +21,10 @@ local MAX_VEHICLE_PAGE_SIZE = tonumber(ADMIN_LIMITS.VehiclePageSize) or 100
 local MAX_BAN_PAGE_SIZE = tonumber(ADMIN_LIMITS.BanPageSize) or 100
 local recentPlayers = {}
 local MAX_RECENT_PLAYERS = tonumber(ADMIN_LIMITS.RecentPlayersCap) or 100
+<<<<<<< HEAD
+=======
+local VEHICLE_SELECT_COLUMNS = "owner, plate, vehicle, stored, pound, type"
+>>>>>>> upstream-1142/1.14.2
 local serverStartedAt = os.time()
 local serverManagementConfig = Config.ServerManagement or {}
 local serverEnvironment = {
@@ -108,7 +112,11 @@ function Helpers.isCallable(value)
 end
 
 function Helpers.registerCallback(name, handler)
+<<<<<<< HEAD
     ESX.RegisterServerCallback(name, function(source, cb, ...)
+=======
+    xLib.callback.registerCompat(name, function(source, cb, ...)
+>>>>>>> upstream-1142/1.14.2
         local ok, result = pcall(handler, source, ...)
         if not ok then
             print(("[esx-adminmenu] Callback %s errored: %s"):format(name, tostring(result)))
@@ -582,9 +590,24 @@ local function decodeVehicleProps(rawVehicle)
     return {}
 end
 
+<<<<<<< HEAD
 local function toVehicleRecord(row, canSeeSensitive)
     local vehicleProps = decodeVehicleProps(row.vehicle)
     local vehicleHash = tonumber(vehicleProps.model)
+=======
+local function escapeLike(value)
+    return (value:gsub("([%%_\\\\])", "\\\\%1"))
+end
+
+local function toVehicleRecord(row, canSeeSensitive)
+    local vehicleProps = decodeVehicleProps(row.vehicle)
+    local vehicleHash = tonumber(vehicleProps.model)
+    local pound = type(row.pound) == "string" and trim(row.pound) or nil
+
+    if pound == "" then
+        pound = nil
+    end
+>>>>>>> upstream-1142/1.14.2
 
     if not vehicleHash then
         return nil
@@ -596,11 +619,114 @@ local function toVehicleRecord(row, canSeeSensitive)
         model = vehicleHash,
         type = capitalize(row.type or "car"),
         stored = row.stored == 1 or row.stored == "1" or row.stored == true,
+<<<<<<< HEAD
         impounded = row.pound ~= nil,
         impoundName = row.pound,
     }
 end
 
+=======
+        impounded = pound ~= nil,
+        impoundName = pound,
+    }
+end
+
+local function vehicleResultKey(row)
+    local plate = trim(row and row.plate):upper()
+    local owner = trim(row and row.owner)
+
+    if plate == "" then
+        return nil
+    end
+
+    return plate .. "\0" .. owner
+end
+
+local function compareVehicleRows(left, right)
+    local leftPlate = trim(left and left.plate)
+    local rightPlate = trim(right and right.plate)
+
+    if leftPlate ~= rightPlate then
+        return leftPlate < rightPlate
+    end
+
+    return trim(left and left.owner) < trim(right and right.owner)
+end
+
+local function vehiclePageResult(rows, limit, nextOffset, canSeeSensitive)
+    local result = {}
+    local rowCount = #(rows or {})
+    local count = math.min(rowCount, limit)
+    local seen = {}
+
+    for i = 1, count do
+        local key = vehicleResultKey(rows[i])
+
+        if key and not seen[key] then
+            local vehicle = toVehicleRecord(rows[i], canSeeSensitive)
+
+            if vehicle then
+                seen[key] = true
+                result[#result + 1] = vehicle
+            end
+        end
+    end
+
+    return {
+        vehicles = result,
+        hasMore = rowCount > limit,
+        nextOffset = nextOffset,
+        limit = limit,
+    }
+end
+
+local function queryVehiclePrefix(column, pattern, limit)
+    local orderBy = column == "plate" and "`plate` ASC" or ("`%s` ASC, `plate` ASC"):format(column)
+
+    return Helpers.safeQuery(
+        ("SELECT %s FROM owned_vehicles WHERE `%s` LIKE ? ESCAPE '\\\\' ORDER BY %s LIMIT ?")
+        :format(VEHICLE_SELECT_COLUMNS, column, orderBy),
+        { pattern, limit + 1 }
+    )
+end
+
+local function appendUniqueVehicleRows(target, seen, rows)
+    if type(rows) ~= "table" then
+        return
+    end
+
+    for i = 1, #rows do
+        local key = vehicleResultKey(rows[i])
+
+        if key and not seen[key] then
+            seen[key] = true
+            target[#target + 1] = rows[i]
+        end
+    end
+end
+
+local function searchVehicles(search, limit, canSeeSensitive)
+    local pattern = escapeLike(search) .. "%"
+    local rows = {}
+    local seen = {}
+
+    if canSeeSensitive then
+        appendUniqueVehicleRows(rows, seen, queryVehiclePrefix("owner", pattern, limit))
+    end
+
+    appendUniqueVehicleRows(rows, seen, queryVehiclePrefix("plate", pattern, limit))
+    appendUniqueVehicleRows(rows, seen, queryVehiclePrefix("type", pattern, limit))
+
+    table.sort(rows, compareVehicleRows)
+
+    local page = vehiclePageResult(rows, limit, #rows, canSeeSensitive)
+    page.hasMore = false
+    page.nextOffset = #page.vehicles
+
+    return page
+end
+
+>>>>>>> upstream-1142/1.14.2
 function Helpers.getVehiclesPage(data, canSeeSensitive)
     data = data or {}
 
@@ -611,6 +737,7 @@ function Helpers.getVehiclesPage(data, canSeeSensitive)
     offset = math.max(0, offset)
 
     local search = trim(data.search):sub(1, 64)
+<<<<<<< HEAD
     local params = {}
     local where = ""
 
@@ -632,10 +759,28 @@ function Helpers.getVehiclesPage(data, canSeeSensitive)
         end
     end
 
+=======
+
+    if search ~= "" then
+        if offset > 0 then
+            return {
+                vehicles = {},
+                hasMore = false,
+                nextOffset = offset,
+                limit = limit,
+            }
+        end
+
+        return searchVehicles(search, limit, canSeeSensitive)
+    end
+
+    local params = {}
+>>>>>>> upstream-1142/1.14.2
     params[#params + 1] = limit + 1
     params[#params + 1] = offset
 
     local rows = Helpers.safeQuery(
+<<<<<<< HEAD
         ("SELECT owner, plate, vehicle, stored, pound, type FROM owned_vehicles%s ORDER BY plate ASC LIMIT ? OFFSET ?")
         :format(where),
         params
@@ -659,6 +804,13 @@ function Helpers.getVehiclesPage(data, canSeeSensitive)
         nextOffset = offset + count,
         limit = limit,
     }
+=======
+        ("SELECT %s FROM owned_vehicles ORDER BY plate ASC LIMIT ? OFFSET ?"):format(VEHICLE_SELECT_COLUMNS),
+        params
+    )
+
+    return vehiclePageResult(rows, limit, offset + math.min(#(rows or {}), limit), canSeeSensitive)
+>>>>>>> upstream-1142/1.14.2
 end
 
 local function normalizeTimestamp(value)
@@ -899,6 +1051,31 @@ end
 
 -- Only memoize a successful, non-empty result so a start-order race with
 -- esx_garage self-heals instead of caching an empty list forever.
+<<<<<<< HEAD
+=======
+local function normalizeImpounds(result)
+    local out = {}
+
+    if type(result) ~= "table" then
+        return out
+    end
+
+    for key, impound in pairs(result) do
+        if type(impound) == "table" then
+            local id = type(impound.id) == "string" and trim(impound.id) or nil
+
+            if id and id ~= "" then
+                out[id] = impound
+            elseif type(key) == "string" and key ~= "" then
+                out[key] = impound
+            end
+        end
+    end
+
+    return out
+end
+
+>>>>>>> upstream-1142/1.14.2
 function Helpers.getImpounds()
     if impounds and next(impounds) then
         return impounds
@@ -908,8 +1085,15 @@ function Helpers.getImpounds()
         return exports["esx_garage"]:getImpounds()
     end)
 
+<<<<<<< HEAD
     if ok and type(result) == "table" and next(result) then
         impounds = result
+=======
+    local normalized = ok and normalizeImpounds(result) or {}
+
+    if next(normalized) then
+        impounds = normalized
+>>>>>>> upstream-1142/1.14.2
         return impounds
     end
 

@@ -60,7 +60,11 @@ function Helpers.resolveVehicleName(hash)
 end
 
 -- Callback helper for the /admincar command.
+<<<<<<< HEAD
 ESX.RegisterClientCallback("esx-adminmenu:client:adminCarVehicleProps", function(cb, data)
+=======
+xLib.callback.registerCompat("esx-adminmenu:client:adminCarVehicleProps", function(cb, data)
+>>>>>>> upstream-1142/1.14.2
 	data = data or {}
 	local ped = PlayerPedId()
 	local vehicle = GetVehiclePedIsIn(ped, false)
@@ -91,7 +95,11 @@ ESX.RegisterClientCallback("esx-adminmenu:client:adminCarVehicleProps", function
 		SetVehicleNumberPlateText(vehicle, plate)
 	end
 
+<<<<<<< HEAD
 	local props = ESX.Game.GetVehicleProperties(vehicle)
+=======
+	local props = xLib.game.getVehicleProperties(vehicle)
+>>>>>>> upstream-1142/1.14.2
 	props.model = GetEntityModel(vehicle)
 	props.plate = ESX.Math.Trim(GetVehicleNumberPlateText(vehicle))
 

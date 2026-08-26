@@ -12,10 +12,17 @@ import type { Player } from "../../tabs/players/types/player";
 import type { Impound } from "../types/impounds";
 
 type NuiMessage =
+<<<<<<< HEAD
 	| { action: "initResource"; data: { translations: Translations; serverData: ServerState; impounds: Record<string, Impound>; vehicleConfig?: VehicleSpawnerConfig } }
 	| { action: "openAdmin"; data: Player[] }
 	| { action: "openAdminDashboard"; data: { players: Player[]; serverData?: ServerState; selectedPlayerId?: number } }
 	| { action: "openAdminMenu"; data?: { serverData?: ServerState } }
+=======
+	| { action: "initResource"; data: { translations: Translations; serverData: ServerState; impounds: Record<string, Impound> | Impound[]; vehicleConfig?: VehicleSpawnerConfig } }
+	| { action: "openAdmin"; data: Player[] }
+	| { action: "openAdminDashboard"; data: { players: Player[]; serverData?: ServerState; selectedPlayerId?: number; impounds?: Record<string, Impound> | Impound[] } }
+	| { action: "openAdminMenu"; data?: { serverData?: ServerState; impounds?: Record<string, Impound> | Impound[] } }
+>>>>>>> upstream-1142/1.14.2
 	| { action: "updateServerData"; data: ServerState }
 	| { action: "adminMenuState"; data: { action: string; active: boolean; value?: string } }
 	| { action: "updatePlayers"; data: Player[] }
@@ -48,6 +55,12 @@ listenNui<NuiMessage>((msg) => {
 			if (msg.data.serverData) {
 				server.set(msg.data.serverData);
 			}
+<<<<<<< HEAD
+=======
+			if (msg.data.impounds) {
+				uiState.setImpounds(msg.data.impounds);
+			}
+>>>>>>> upstream-1142/1.14.2
 			uiState.openDashboard(msg.data.players ?? [], msg.data.selectedPlayerId ?? null);
 			if (msg.data.selectedPlayerId !== undefined) {
 				currentPage.set("ply_management");
@@ -58,6 +71,12 @@ listenNui<NuiMessage>((msg) => {
 			if (msg.data?.serverData) {
 				server.set(msg.data.serverData);
 			}
+<<<<<<< HEAD
+=======
+			if (msg.data?.impounds) {
+				uiState.setImpounds(msg.data.impounds);
+			}
+>>>>>>> upstream-1142/1.14.2
 			uiState.openMenu();
 			break;
 

@@ -38,6 +38,10 @@ type RadioPlayersResponse = NuiSuccess & {
 
 const VEHICLE_PAGE_SIZE = 100;
 const BAN_PAGE_SIZE = 100;
+<<<<<<< HEAD
+=======
+let vehiclePageRequestId = 0;
+>>>>>>> upstream-1142/1.14.2
 
 // Admin Actions
 export const bringPlayer = (playerId: number) => fetchNui<NuiSuccess>("bring", { id: playerId });
@@ -100,7 +104,11 @@ export const impoundVehicle = async (plate: string, impoundName: string) => {
 	const res = await fetchNui<NuiSuccess>("vehicle:impound", { plate, impoundName });
 
 	if (res?.success) {
+<<<<<<< HEAD
 		uiState.updateVehicleImpoundState(plate, true);
+=======
+		uiState.updateVehicleImpoundState(plate, true, impoundName);
+>>>>>>> upstream-1142/1.14.2
 	}
 };
 
@@ -137,18 +145,38 @@ export const runPlayerAction = (playerId: number | string | undefined, action: s
 };
 
 export const fetchVehiclePage = async (options: { reset?: boolean; search?: string } = {}) => {
+<<<<<<< HEAD
 	if (uiState.vehicleLoading) return false;
 	if (!options.reset && !uiState.vehicleHasMore) return false;
 
+=======
+	const search = (options.search ?? "").trim();
+	const isSearch = search !== "";
+
+	if (uiState.vehicleLoading && !options.reset) return false;
+	if (isSearch && !options.reset) return false;
+	if (!options.reset && !uiState.vehicleHasMore) return false;
+
+	const requestId = ++vehiclePageRequestId;
+>>>>>>> upstream-1142/1.14.2
 	uiState.vehicleLoading = true;
 
 	try {
 		const res = await fetchNui<VehiclePageResponse>("getVehicles", {
+<<<<<<< HEAD
 			offset: options.reset ? 0 : uiState.vehicleNextOffset,
 			limit: VEHICLE_PAGE_SIZE,
 			search: options.search ?? "",
 		});
 
+=======
+			offset: options.reset || isSearch ? 0 : uiState.vehicleNextOffset,
+			limit: VEHICLE_PAGE_SIZE,
+			search,
+		});
+
+		if (requestId !== vehiclePageRequestId) return false;
+>>>>>>> upstream-1142/1.14.2
 		if (!res?.success) return false;
 
 		const vehicles = res.vehicles ?? [];
@@ -163,7 +191,13 @@ export const fetchVehiclePage = async (options: { reset?: boolean; search?: stri
 
 		return true;
 	} finally {
+<<<<<<< HEAD
 		uiState.vehicleLoading = false;
+=======
+		if (requestId === vehiclePageRequestId) {
+			uiState.vehicleLoading = false;
+		}
+>>>>>>> upstream-1142/1.14.2
 	}
 };
 
@@ -212,9 +246,15 @@ export const getRadioChannelPlayers = async (channel: number) => {
 };
 
 type AdminLogPageResponse = NuiSuccess & {
+<<<<<<< HEAD
 	logs?: AdminLog[];
 	hasMore?: boolean;
 	nextOffset?: number;
+=======
+    logs?: AdminLog[];
+    hasMore?: boolean;
+    nextCursor?: number | null;
+>>>>>>> upstream-1142/1.14.2
 };
 
 // The log page owns its own state instead of a shared store: it is read-only
@@ -225,7 +265,11 @@ export const fetchAdminLogs = async (filters: AdminLogFilters = {}) => {
 	return {
 		logs: res?.success ? (res.logs ?? []) : [],
 		hasMore: res?.hasMore === true,
+<<<<<<< HEAD
 		nextOffset: res?.nextOffset ?? 0,
+=======
+		nextCursor: res?.nextCursor ?? null,
+>>>>>>> upstream-1142/1.14.2
 		ok: res?.success === true,
 	};
 };

@@ -4,7 +4,11 @@ export const en: LocaleTranslations = {
   garage: {
     title: 'Garage',
     subtitle: 'Vehicle Management',
+<<<<<<< HEAD
     search: 'Search by plate, model or name...',
+=======
+    search: 'Search by plate or name...',
+>>>>>>> upstream-1142/1.14.2
     noVehicles: 'No vehicles found',
     loading: 'Loading vehicles...'
   },

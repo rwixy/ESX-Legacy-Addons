@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
+=======
+import React, { useRef, useState } from 'react';
+>>>>>>> upstream-1142/1.14.2
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { MdSettings } from 'react-icons/md';
@@ -253,6 +257,20 @@ const ActionButton = styled.button<{ $primary?: boolean }>`
       ? props.theme.colors.button.primaryHover
       : 'rgba(242, 242, 242, 0.15)'};
   }
+<<<<<<< HEAD
+=======
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  &:disabled:hover {
+    background: ${props => props.$primary
+      ? props.theme.colors.primary
+      : 'rgba(242, 242, 242, 0.10)'};
+  }
+>>>>>>> upstream-1142/1.14.2
 `;
 
 const SpawnButton = styled(ActionButton)`
@@ -282,16 +300,26 @@ interface VehicleDetailsProps {
 }
 
 export const VehicleDetails: React.FC<VehicleDetailsProps> = ({ vehicle, onClose }) => {
+<<<<<<< HEAD
   const { setLoading, selectedGarage, renameVehicle } = useGarageStore();
   const { showNotification } = useNotifications();
   const [mode, setMode] = useState<null | 'rename' | 'transfer'>(null);
   const [input, setInput] = useState('');
+=======
+  const { isLoading, selectedGarage, renameVehicle, retrieveVehicle } = useGarageStore();
+  const { showNotification } = useNotifications();
+  const [mode, setMode] = useState<null | 'rename' | 'transfer'>(null);
+  const [input, setInput] = useState('');
+  const [isSpawning, setIsSpawning] = useState(false);
+  const spawnPendingRef = useRef(false);
+>>>>>>> upstream-1142/1.14.2
 
   const isImpoundLot = selectedGarage?.type === 'impound';
   const isOut = !vehicle.stored && !vehicle.impounded;
   const canTake = isImpoundLot ? (vehicle.impounded || isOut) : vehicle.stored;
 
   const handleSpawn = async () => {
+<<<<<<< HEAD
     setLoading(true);
     try {
       await fetchNui(NuiCallbackType.RETRIEVE_VEHICLE, { vehicleId: vehicle.id });
@@ -300,6 +328,24 @@ export const VehicleDetails: React.FC<VehicleDetailsProps> = ({ vehicle, onClose
       showNotification(errorMessage(e, 'Cannot retrieve vehicle'), { type: 'error' });
     } finally {
       setLoading(false);
+=======
+    if (spawnPendingRef.current || isLoading) {
+      return;
+    }
+
+    spawnPendingRef.current = true;
+    setIsSpawning(true);
+    try {
+      const retrieved = await retrieveVehicle(vehicle.id);
+      if (!retrieved) {
+        return;
+      }
+
+      onClose();
+    } finally {
+      spawnPendingRef.current = false;
+      setIsSpawning(false);
+>>>>>>> upstream-1142/1.14.2
     }
   };
 
@@ -458,11 +504,20 @@ export const VehicleDetails: React.FC<VehicleDetailsProps> = ({ vehicle, onClose
       </ActionsSection>
 
       {canTake && (
+<<<<<<< HEAD
         <SpawnButton onClick={handleSpawn}>
           {vehicle.impounded ? 'Retrieve' : isOut ? 'Recover' : 'Spawn Vehicle'}
+=======
+        <SpawnButton onClick={handleSpawn} disabled={isSpawning || isLoading}>
+          {isSpawning ? 'Spawning...' : vehicle.impounded ? 'Retrieve' : isOut ? 'Recover' : 'Spawn Vehicle'}
+>>>>>>> upstream-1142/1.14.2
           {(vehicle.impoundFee ?? 0) > 0 && ` ($${vehicle.impoundFee})`}
         </SpawnButton>
       )}
     </DetailsContainer>
   );
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> upstream-1142/1.14.2

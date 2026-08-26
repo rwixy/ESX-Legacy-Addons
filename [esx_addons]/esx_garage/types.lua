@@ -8,7 +8,13 @@
 
 ---@class GaragePed
 ---@field model string | integer
+<<<<<<< HEAD
 ---@field coords vector4
+=======
+---@field z? number
+---@field heading? number
+---@field snapToGround? boolean
+>>>>>>> upstream-1142/1.14.2
 
 ---@class GarageAccess
 ---@field jobs? table<string, integer> Job name mapped to the minimum grade allowed.
@@ -19,6 +25,10 @@
 ---@field label string
 ---@field type GarageType
 ---@field entryPoint vector3
+<<<<<<< HEAD
+=======
+---@field storePoint? vector3
+>>>>>>> upstream-1142/1.14.2
 ---@field spawns vector4[]
 ---@field blip? GarageBlip
 ---@field ped? GaragePed
@@ -35,13 +45,24 @@
 ---@field spawns vector4[]
 ---@field blip? GarageBlip
 ---@field ped? GaragePed
+<<<<<<< HEAD
 ---@field cost integer
+=======
+---@field cost? integer Defaults to Config.Settings.defaultImpoundFee when omitted.
+>>>>>>> upstream-1142/1.14.2
 
 ---@class GarageSettings
 ---@field interactionDistance number
 ---@field restrictToGarage boolean
 ---@field defaultImpoundFee integer
 ---@field vehicleKeys boolean
+<<<<<<< HEAD
+=======
+---@field storeMarkerOnlyInVehicle boolean
+---@field showMarker boolean
+---@field vehiclesPerPage integer
+---@field maxVehiclesPerMenu integer
+>>>>>>> upstream-1142/1.14.2
 
 ---@class OwnedVehicleRow
 ---@field plate string
@@ -53,7 +74,11 @@
 ---@field custom_name string?
 ---@field is_favorite integer
 ---@field last_used integer?
+<<<<<<< HEAD
 ---@field mileage integer
+=======
+---@field mileage number
+>>>>>>> upstream-1142/1.14.2
 
 ---@class GarageVehicle
 ---@field id string
@@ -65,7 +90,12 @@
 ---@field garage string?
 ---@field impounded boolean
 ---@field impoundFee integer?
+<<<<<<< HEAD
 ---@field mileage integer
+=======
+---@field mileage number
+---@field mileageUnit 'mi'|'km'
+>>>>>>> upstream-1142/1.14.2
 ---@field fuel number?
 ---@field engine number?
 ---@field body number?

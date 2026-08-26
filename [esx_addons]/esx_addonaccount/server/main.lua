@@ -204,10 +204,48 @@ AddEventHandler('txAdmin:events:scheduledRestart', function(eventData)
     end
 end)
 
+<<<<<<< HEAD
 AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         Database.saveAccounts()
     end
+=======
+AddEventHandler('esx_addonaccount:refreshAccounts', function()
+	AccountsIndex, Accounts, SharedAccounts = {}, {}, {}
+	local addonAccounts = MySQL.query.await('SELECT * FROM addon_account')
+
+	for i = 1, #addonAccounts, 1 do
+		local name             = addonAccounts[i].name
+		local shared           = addonAccounts[i].shared
+
+		local addonAccountData = MySQL.query.await('SELECT * FROM addon_account_data WHERE account_name = ?', { name })
+
+		if shared == 0 then
+			table.insert(AccountsIndex, name)
+			Accounts[name] = {}
+
+			for j = 1, #addonAccountData, 1 do
+				local addonAccount = CreateAddonAccount(name, addonAccountData[j].owner, addonAccountData[j].money)
+				table.insert(Accounts[name], addonAccount)
+			end
+		else
+			local money = nil
+
+			if #addonAccountData == 0 then
+				MySQL.insert('INSERT INTO addon_account_data (account_name, money, owner) VALUES (?, ?, ?)',
+					{ name, 0, nil })
+				money = 0
+			else
+				money = addonAccountData[1].money
+			end
+
+			local addonAccount   = CreateAddonAccount(name, nil, money)
+			SharedAccounts[name] = addonAccount
+		end
+	end
+
+	GlobalState.SharedAccounts = SharedAccounts
+>>>>>>> upstream-1142/1.14.2
 end)
 
 AddEventHandler('txAdmin:events:serverShuttingDown', Database.saveAccounts)

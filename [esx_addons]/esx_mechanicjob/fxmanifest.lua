@@ -7,22 +7,42 @@ lua54 'yes'
 version '1.0'
 legacyversion '1.14.1'
 
-shared_script '@es_extended/imports.lua'
+shared_scripts {
+	'@esx_lib/imports.lua',
+	'@es_extended/imports.lua'
+}
 
 client_scripts {
 	'@es_extended/locale.lua',
 	'locales/*.lua',
 	'config.lua',
-	'client/main.lua'
+	'client/modules/init.lua',
+	'client/modules/utils.lua',
+	'client/modules/npc_jobs.lua',
+	'client/modules/menus.lua',
+	'client/modules/item_actions.lua',
+	'client/modules/markers.lua',
+	'client/modules/commands.lua'
 }
 
 server_scripts {
 	'@es_extended/locale.lua',
 	'locales/*.lua',
 	'config.lua',
+<<<<<<< HEAD
 	'server/callbacks.lua',
 	'server/usables.lua',
 	'server/main.lua'
+=======
+	'server/modules/init.lua',
+	'server/modules/utils.lua',
+	'server/main.lua',
+	'server/modules/impound.lua',
+	'server/modules/workshop.lua',
+	'server/modules/npc_jobs.lua',
+	'server/modules/items.lua',
+	'server/modules/stock.lua'
+>>>>>>> upstream-1142/1.14.2
 }
 
 dependencies {

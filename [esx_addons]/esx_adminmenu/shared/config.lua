@@ -315,7 +315,11 @@ Config.AdminLimits = {
 	MaxRadioChannel = 10000,
 	MaxVehiclePropsBytes = 16384,
 	OfflineSearchResults = 25,
+<<<<<<< HEAD
 	OfflineSearchCooldownMs = 500,
+=======
+	OfflineSearchCooldownMs = 1000,
+>>>>>>> upstream-1142/1.14.2
 	MinOfflineSearchLength = 3,
 	VehiclePageSize = 100,
 	BanPageSize = 100,

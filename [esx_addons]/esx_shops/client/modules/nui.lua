@@ -54,7 +54,11 @@ function OpenShop(zone)
 	end)
 
 	-- Get player's dynamic tax rate
+<<<<<<< HEAD
 	ESX.TriggerServerCallback('esx_shops:getTaxRate', function(taxRate, taxMessage)
+=======
+	xLib.callback('esx_shops:getTaxRate', false, function(taxRate, taxMessage)
+>>>>>>> upstream-1142/1.14.2
 		if callbackReceived then return end
 		callbackReceived = true
 
@@ -112,7 +116,11 @@ RegisterNUICallback('purchaseItems', function(data, cb)
 		return
 	end
 
+<<<<<<< HEAD
 	ESX.TriggerServerCallback('esx_shops:purchaseItems', function(success, message)
+=======
+	xLib.callback('esx_shops:purchaseItems', false, function(success, message)
+>>>>>>> upstream-1142/1.14.2
 		if success then
 			cb({ ok = true, data = { message = message } })
 		else

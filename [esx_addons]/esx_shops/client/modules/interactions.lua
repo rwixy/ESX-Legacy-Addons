@@ -39,7 +39,11 @@ function GetCurrentAction()
 end
 
 -- Register ESX interaction
+<<<<<<< HEAD
 ESX.RegisterInteraction('shop_menu', function()
+=======
+xLib.interactions.register('shop_menu', function()
+>>>>>>> upstream-1142/1.14.2
 	local data = GetCurrentActionData()
 	if data and data.zone then
 		OpenShop(data.zone)

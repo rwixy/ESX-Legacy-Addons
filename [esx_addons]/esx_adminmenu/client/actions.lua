@@ -796,12 +796,30 @@ function ClientActions.FlipVehicle()
 	return true
 end
 
+<<<<<<< HEAD
+=======
+local function markDeletedVehicleImpounded(vehicle)
+	if not DoesEntityExist(vehicle) then
+		return
+	end
+
+	local plate = trimString(GetVehicleNumberPlateText(vehicle))
+	if plate ~= "" then
+		TriggerServerEvent("esx-adminmenu:server:impoundDeletedVehicle", plate)
+	end
+end
+
+>>>>>>> upstream-1142/1.14.2
 function ClientActions.DeleteVehicle()
 	local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
 	if vehicle == 0 then
 		return false, "You must be in a vehicle."
 	end
 
+<<<<<<< HEAD
+=======
+	markDeletedVehicleImpounded(vehicle)
+>>>>>>> upstream-1142/1.14.2
 	SetEntityAsMissionEntity(vehicle, true, true)
 	DeleteEntity(vehicle)
 
@@ -827,6 +845,10 @@ function ClientActions.SpawnVehicle(data)
 	local deleteCurrent = true
 
 	if currentVehicle ~= 0 and deleteCurrent then
+<<<<<<< HEAD
+=======
+		markDeletedVehicleImpounded(currentVehicle)
+>>>>>>> upstream-1142/1.14.2
 		SetEntityAsMissionEntity(currentVehicle, true, true)
 		DeleteEntity(currentVehicle)
 	end
@@ -1297,7 +1319,11 @@ function Spectate(targetId, targetCoords)
 			if IsDisabledControlJustPressed(0, 322) and GetGameTimer() >= escCooldownUntil then
 				escCooldownUntil = GetGameTimer() + escCooldown
 
+<<<<<<< HEAD
 				ESX.TriggerServerCallback("esx-adminmenu:server:spectate:stop", function(res)
+=======
+				xLib.callback("esx-adminmenu:server:spectate:stop", false, function(res)
+>>>>>>> upstream-1142/1.14.2
 					if not res or res.err then
 						print("[esx-adminmenu]", res and res.err)
 						return

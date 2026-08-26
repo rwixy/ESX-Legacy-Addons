@@ -1,11 +1,15 @@
+<<<<<<< HEAD
 
 local PlayersHarvesting, PlayersCrafting = {}, {}
 
+=======
+>>>>>>> upstream-1142/1.14.2
 if Config.MaxInService ~= -1 then
 	TriggerEvent('esx_service:activateService', 'mechanic', Config.MaxInService)
 end
 
 TriggerEvent('esx_society:registerSociety', 'mechanic', 'mechanic', 'society_mechanic', 'society_mechanic', 'society_mechanic', {type = 'private'})
+<<<<<<< HEAD
 
 local function Harvest(source, itemType)
 	SetTimeout(4000, function()
@@ -126,3 +130,5 @@ RegisterServerEvent('esx_mechanicjob:putStockItems', function(itemName, count)
 		xPlayer.showNotification(TranslateCap('have_deposited', count, item.label))
 	end)
 end)
+=======
+>>>>>>> upstream-1142/1.14.2

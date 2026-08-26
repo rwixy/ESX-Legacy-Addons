@@ -4,7 +4,11 @@ export const de: LocaleTranslations = {
   garage: {
     title: 'Garage',
     subtitle: 'Fahrzeugverwaltung',
+<<<<<<< HEAD
     search: 'Suche nach Kennzeichen, Modell oder Name...',
+=======
+    search: 'Suche nach Kennzeichen oder Name...',
+>>>>>>> upstream-1142/1.14.2
     noVehicles: 'Keine Fahrzeuge gefunden',
     loading: 'Lädt Fahrzeuge...'
   },

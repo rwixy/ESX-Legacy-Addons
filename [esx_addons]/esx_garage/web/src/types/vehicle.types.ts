@@ -9,6 +9,10 @@ export interface Vehicle {
   impounded: boolean;
   impoundFee?: number;
   mileage: number;
+<<<<<<< HEAD
+=======
+  mileageUnit?: MileageUnit;
+>>>>>>> upstream-1142/1.14.2
   fuel?: number;
   engine?: number;
   body?: number;
@@ -19,6 +23,11 @@ export interface Vehicle {
   props?: VehicleProps;
 }
 
+<<<<<<< HEAD
+=======
+export type MileageUnit = 'mi' | 'km';
+
+>>>>>>> upstream-1142/1.14.2
 export const VehicleType = {
   CAR: 'car',
   MOTORCYCLE: 'motorcycle',
@@ -67,4 +76,22 @@ export interface VehicleStats {
   stored: number;
   out: number;
   impounded: number;
+<<<<<<< HEAD
 }
+=======
+}
+
+export interface VehiclePagination {
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface VehiclePageResponse {
+  vehicles: Vehicle[];
+  mileageUnit?: MileageUnit;
+  pagination: VehiclePagination;
+  stats?: VehicleStats;
+}
+>>>>>>> upstream-1142/1.14.2

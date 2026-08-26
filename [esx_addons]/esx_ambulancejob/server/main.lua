@@ -1,4 +1,5 @@
 local playersHealing, deadPlayers = {}, {}
+local reviveCooldowns = {}
 
 if GetResourceState("esx_phone") ~= 'missing' then
 	TriggerEvent('esx_phone:registerNumber', 'ambulance', TranslateCap('alert_ambulance'), true, true)
@@ -29,15 +30,30 @@ local function persistDeathStatus(src, bool)
 	end
 end
 
+<<<<<<< HEAD
+=======
+local function isNearPlayer(source, target, distance)
+	local sourcePed = GetPlayerPed(source)
+	local targetPed = GetPlayerPed(target)
+	if not sourcePed or sourcePed == 0 or not targetPed or targetPed == 0 then
+		return false
+	end
+
+	return #(GetEntityCoords(sourcePed) - GetEntityCoords(targetPed)) <= distance
+end
+
+>>>>>>> upstream-1142/1.14.2
 RegisterNetEvent('esx_ambulancejob:revive')
 AddEventHandler('esx_ambulancejob:revive', function(playerId)
 	playerId = tonumber(playerId)
 	local xPlayer = source and ESX.GetPlayerFromId(source)
+	local now = os.clock()
 
-	if xPlayer and xPlayer.job.name == 'ambulance' then
+	if xPlayer and xPlayer.job.name == 'ambulance' and playerId and (not reviveCooldowns[source] or now - reviveCooldowns[source] > 8) then
 		local xTarget = ESX.GetPlayerFromId(playerId)
 		if xTarget then
-			if deadPlayers[playerId] then
+			if deadPlayers[playerId] and isNearPlayer(source, playerId, 8.0) then
+				reviveCooldowns[source] = now
 				if Config.ReviveReward > 0 then
 					xPlayer.showNotification(TranslateCap('revive_complete_award', xTarget.name, Config.ReviveReward))
 					xPlayer.addMoney(Config.ReviveReward, "Revive Reward")
@@ -133,6 +149,7 @@ AddEventHandler('esx:onPlayerSpawn', function()
 end)
 
 AddEventHandler('esx:playerDropped', function(playerId, reason)
+	reviveCooldowns[playerId] = nil
 	if deadPlayers[playerId] then
 		deadPlayers[playerId] = nil
 		isDeadState(playerId, false)
@@ -164,7 +181,7 @@ AddEventHandler('esx_ambulancejob:putInVehicle', function(target)
 	end
 end)
 
-ESX.RegisterServerCallback('esx_ambulancejob:removeItemsAfterRPDeath', function(source, cb)
+xLib.callback.registerCompat('esx_ambulancejob:removeItemsAfterRPDeath', function(source, cb)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	if not xPlayer then return cb() end
 
@@ -222,7 +239,7 @@ ESX.RegisterServerCallback('esx_ambulancejob:removeItemsAfterRPDeath', function(
 end)
 
 if Config.EarlyRespawnFine then
-	ESX.RegisterServerCallback('esx_ambulancejob:checkBalance', function(source, cb)
+	xLib.callback.registerCompat('esx_ambulancejob:checkBalance', function(source, cb)
 		local xPlayer = ESX.GetPlayerFromId(source)
 		local bankBalance = xPlayer.getAccount('bank').money
 
@@ -239,14 +256,14 @@ if Config.EarlyRespawnFine then
 	end)
 end
 
-ESX.RegisterServerCallback('esx_ambulancejob:getItemAmount', function(source, cb, item)
+xLib.callback.registerCompat('esx_ambulancejob:getItemAmount', function(source, cb, item)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local quantity = xPlayer.getInventoryItem(item).count
 
 	cb(quantity)
 end)
 
-ESX.RegisterServerCallback('esx_ambulancejob:buyJobVehicle', function(source, cb, vehicleProps, type)
+xLib.callback.registerCompat('esx_ambulancejob:buyJobVehicle', function(source, cb, vehicleProps, type)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local price = getPriceFromHash(vehicleProps.model, xPlayer.job.grade_name, type)
 
@@ -268,7 +285,7 @@ ESX.RegisterServerCallback('esx_ambulancejob:buyJobVehicle', function(source, cb
 	end
 end)
 
-ESX.RegisterServerCallback('esx_ambulancejob:storeNearbyVehicle', function(source, cb, plates)
+xLib.callback.registerCompat('esx_ambulancejob:storeNearbyVehicle', function(source, cb, plates)
 	local xPlayer = ESX.GetPlayerFromId(source)
 
 	local plate = MySQL.scalar.await('SELECT plate FROM owned_vehicles WHERE owner = ? AND plate IN (?) AND job = ?',
@@ -375,7 +392,7 @@ ESX.RegisterUsableItem('bandage', function(source)
 	end
 end)
 
-ESX.RegisterServerCallback('esx_ambulancejob:getDeadPlayers', function(source, cb)
+xLib.callback.registerCompat('esx_ambulancejob:getDeadPlayers', function(source, cb)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	if xPlayer.job.name == "ambulance" then
 		cb(deadPlayers)

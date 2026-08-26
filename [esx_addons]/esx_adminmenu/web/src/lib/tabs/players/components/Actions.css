@@ -436,7 +436,12 @@
 
 .lg-dropdown {
     width: 100%;
+<<<<<<< HEAD
     height: 3vh;
+=======
+    min-height: 3vh;
+    height: auto;
+>>>>>>> upstream-1142/1.14.2
 }
 
 .confirm-dropdown-trigger {
@@ -496,6 +501,25 @@
     transform: translateY(0);
 }
 
+<<<<<<< HEAD
+=======
+.lg-dropdown .confirm-dropdown-trigger {
+    height: 3vh;
+}
+
+.lg-dropdown .confirm-dropdown-menu {
+    position: static;
+    display: none;
+    max-height: min(18vh, calc(100vh - 18vh));
+    overflow-y: auto;
+}
+
+.lg-dropdown .confirm-dropdown-menu.open {
+    display: block;
+    max-height: min(18vh, calc(100vh - 18vh));
+}
+
+>>>>>>> upstream-1142/1.14.2
 .confirm-dropdown-item {
     all: unset;
     box-sizing: border-box;

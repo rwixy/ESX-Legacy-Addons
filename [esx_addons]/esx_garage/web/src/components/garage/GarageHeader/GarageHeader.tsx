@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
+=======
+import React, { useEffect, useRef, useState } from 'react';
+>>>>>>> upstream-1142/1.14.2
 import styled from 'styled-components';
 import { MdGarage, MdClose, MdSearch } from 'react-icons/md';
 import { GiHook } from 'react-icons/gi';
@@ -12,8 +16,13 @@ const HeaderContainer = styled.div`
   flex-direction: row;
   align-items: center;
   width: 100%;
+<<<<<<< HEAD
   padding: 1.5rem 1.25rem 0 1.25rem;
   height: 3.875rem;
+=======
+  padding: 1.5rem 1.25rem 0.75rem 1.25rem;
+  height: 4.625rem;
+>>>>>>> upstream-1142/1.14.2
 `;
 
 const GarageName = styled.div`
@@ -61,7 +70,11 @@ const ControlsContainer = styled.div`
   flex-shrink: 0;
 `;
 
+<<<<<<< HEAD
 const CounterButton = styled.div<{ $variant?: 'primary' | 'danger'; $active?: boolean }>`
+=======
+const CounterButton = styled.button<{ $variant?: 'primary' | 'danger'; $active?: boolean }>`
+>>>>>>> upstream-1142/1.14.2
   background: ${(props) => {
     if (props.$active) {
       return props.$variant === 'danger'
@@ -72,12 +85,22 @@ const CounterButton = styled.div<{ $variant?: 'primary' | 'danger'; $active?: bo
       ? props.theme.colors.button.dangerBg
       : props.theme.colors.button.secondary;
   }};
+<<<<<<< HEAD
   border-radius: ${(props) => props.theme.sizes.borderRadius.lg};
   padding: 0 0.625rem 0 0.1875rem;
   height: 1.875rem;
   display: flex;
   align-items: center;
   gap: 0.3125rem;
+=======
+  border-radius: 9999px;
+  padding: 0;
+  width: 1.875rem;
+  height: 1.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+>>>>>>> upstream-1142/1.14.2
   box-shadow: ${(props) => {
     if (props.$active) {
       return props.$variant === 'danger'
@@ -101,7 +124,11 @@ const CounterIcon = styled.div<{ $variant?: 'primary' | 'danger'; $active?: bool
       : props.$variant === 'danger'
         ? props.theme.colors.secondary
         : props.theme.colors.primary};
+<<<<<<< HEAD
   border-radius: 6.25rem;
+=======
+  border-radius: 9999px;
+>>>>>>> upstream-1142/1.14.2
   width: 1.5rem;
   height: 1.5rem;
   display: flex;
@@ -120,6 +147,7 @@ const CounterIcon = styled.div<{ $variant?: 'primary' | 'danger'; $active?: bool
   }
 `;
 
+<<<<<<< HEAD
 const CounterText = styled.span<{ $variant?: 'primary' | 'danger'; $active?: boolean }>`
   color: ${(props) =>
     props.$active
@@ -131,6 +159,8 @@ const CounterText = styled.span<{ $variant?: 'primary' | 'danger'; $active?: boo
   font-weight: ${(props) => props.theme.fonts.weights.bold};
 `;
 
+=======
+>>>>>>> upstream-1142/1.14.2
 const SearchBar = styled.div`
   background: ${(props) => props.theme.colors.backgroundSecondary};
   border-radius: ${(props) => props.theme.sizes.borderRadius.sm};
@@ -189,6 +219,7 @@ const CloseButton = styled.button`
 // Spacer removed - use margin-left: auto instead
 
 export const GarageHeader: React.FC = () => {
+<<<<<<< HEAD
   const { selectedGarage, stats, filter, setFilter, setOpen } = useGarageStore();
   const { sendCallback } = useNui();
   const { t } = useTranslation();
@@ -199,6 +230,32 @@ export const GarageHeader: React.FC = () => {
     setFilter({ search: value });
   };
 
+=======
+  const { selectedGarage, filter, setFilter, loadVehicles, setOpen } = useGarageStore();
+  const { sendCallback } = useNui();
+  const { t } = useTranslation();
+  const [searchValue, setSearchValue] = useState('');
+  const searchReady = useRef(false);
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+  };
+
+  useEffect(() => {
+    if (!searchReady.current) {
+      searchReady.current = true;
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setFilter({ search: searchValue });
+      void loadVehicles(1);
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [loadVehicles, searchValue, setFilter]);
+
+>>>>>>> upstream-1142/1.14.2
   const handleClose = () => {
     sendCallback('garage:closeUI');
     setOpen(false);
@@ -210,6 +267,10 @@ export const GarageHeader: React.FC = () => {
     } else {
       setFilter({ stored: true, impounded: 'all' });
     }
+<<<<<<< HEAD
+=======
+    void loadVehicles(1);
+>>>>>>> upstream-1142/1.14.2
   };
 
   const handleImpoundedFilter = () => {
@@ -218,6 +279,10 @@ export const GarageHeader: React.FC = () => {
     } else {
       setFilter({ impounded: true, stored: 'all' });
     }
+<<<<<<< HEAD
+=======
+    void loadVehicles(1);
+>>>>>>> upstream-1142/1.14.2
   };
 
   return (
@@ -230,24 +295,44 @@ export const GarageHeader: React.FC = () => {
       </GarageName>
 
       <ControlsContainer>
+<<<<<<< HEAD
         <CounterButton onClick={handleStoredFilter} $active={filter.stored === true}>
           <CounterIcon $active={filter.stored === true}>
             <IoCarSport />
           </CounterIcon>
           <CounterText $active={filter.stored === true}>{stats.stored}</CounterText>
+=======
+        <CounterButton
+          aria-label={t('filters.showStored')}
+          title={t('filters.showStored')}
+          onClick={handleStoredFilter}
+          $active={filter.stored === true}
+        >
+          <CounterIcon $active={filter.stored === true}>
+            <IoCarSport />
+          </CounterIcon>
+>>>>>>> upstream-1142/1.14.2
         </CounterButton>
 
         <CounterButton
           $variant="danger"
+<<<<<<< HEAD
+=======
+          aria-label={t('filters.showImpounded')}
+          title={t('filters.showImpounded')}
+>>>>>>> upstream-1142/1.14.2
           onClick={handleImpoundedFilter}
           $active={filter.impounded === true}
         >
           <CounterIcon $variant="danger" $active={filter.impounded === true}>
             <GiHook />
           </CounterIcon>
+<<<<<<< HEAD
           <CounterText $variant="danger" $active={filter.impounded === true}>
             {stats.impounded}
           </CounterText>
+=======
+>>>>>>> upstream-1142/1.14.2
         </CounterButton>
 
         <SearchBar>

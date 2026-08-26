@@ -24,6 +24,11 @@ export type VehicleSpawnerConfig = {
 
 export const dummyImpounds: Record<string, Impound> = {
 	city_impound: {
+<<<<<<< HEAD
+=======
+		id: "city_impound",
+		label: "City Impound",
+>>>>>>> upstream-1142/1.14.2
 		getOutPoint: { x: 408.9, y: -1625.2, z: 29.3 },
 		spawnPoint: { x: 401.2, y: -1631.5, z: 29.3, heading: 228.5 },
 		sprite: 357,
@@ -33,6 +38,11 @@ export const dummyImpounds: Record<string, Impound> = {
 	},
 
 	sandy_impound: {
+<<<<<<< HEAD
+=======
+		id: "sandy_impound",
+		label: "Sandy Impound",
+>>>>>>> upstream-1142/1.14.2
 		getOutPoint: { x: 1738.5, y: 3710.1, z: 34.1 },
 		spawnPoint: { x: 1729.9, y: 3707.4, z: 34.2, heading: 21.2 },
 		sprite: 357,
@@ -42,6 +52,11 @@ export const dummyImpounds: Record<string, Impound> = {
 	},
 
 	paleto_impound: {
+<<<<<<< HEAD
+=======
+		id: "paleto_impound",
+		label: "Paleto Impound",
+>>>>>>> upstream-1142/1.14.2
 		getOutPoint: { x: -234.5, y: 6198.2, z: 31.5 },
 		spawnPoint: { x: -230.1, y: 6205.6, z: 31.5, heading: 135.0 },
 		sprite: 357,
@@ -216,8 +231,29 @@ export class UIState {
 		this.banLoading = false;
 	}
 
+<<<<<<< HEAD
 	setImpounds(impounds: Record<string, Impound>) {
 		this.impounds = impounds;
+=======
+	setImpounds(impounds?: Record<string, Impound> | Impound[] | null) {
+		const normalized: Record<string, Impound> = {};
+
+		if (Array.isArray(impounds)) {
+			for (const impound of impounds) {
+				const id = typeof impound?.id === "string" ? impound.id.trim() : "";
+				if (id) normalized[id] = impound;
+			}
+		} else if (impounds && typeof impounds === "object") {
+			for (const [key, impound] of Object.entries(impounds)) {
+				if (!impound || typeof impound !== "object") continue;
+
+				const id = typeof impound.id === "string" && impound.id.trim() ? impound.id.trim() : key;
+				if (id) normalized[id] = impound;
+			}
+		}
+
+		this.impounds = normalized;
+>>>>>>> upstream-1142/1.14.2
 	}
 
 	setVehicleConfig(config?: Partial<VehicleSpawnerConfig> | null) {
@@ -252,10 +288,17 @@ export class UIState {
 		this.bans = this.bans.filter((b) => b.identifier !== identifier);
 	}
 
+<<<<<<< HEAD
 	updateVehicleImpoundState(plate: string, state: boolean) {
 		if (!this.vehicles) return;
 
 		this.vehicles = this.vehicles.map((v) => (v.plate === plate ? { ...v, impounded: state } : v));
+=======
+	updateVehicleImpoundState(plate: string, state: boolean, impoundName?: string | null) {
+		if (!this.vehicles) return;
+
+		this.vehicles = this.vehicles.map((v) => (v.plate === plate ? { ...v, impounded: state, impoundName: state ? (impoundName ?? v.impoundName) : null } : v));
+>>>>>>> upstream-1142/1.14.2
 	}
 
 	removeVehicle(plate: string) {

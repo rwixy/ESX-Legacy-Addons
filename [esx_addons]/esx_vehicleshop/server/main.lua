@@ -1,5 +1,78 @@
 local categories, vehicles = {}, {}
 local vehiclesByModel = {}
+local NumberCharset, Charset = {}, {}
+
+for i = 48, 57 do NumberCharset[#NumberCharset + 1] = string.char(i) end
+for i = 65, 90 do Charset[#Charset + 1] = string.char(i) end
+
+local function getRandomNumber(length)
+	local value = ''
+	for i = 1, length do
+		value = value .. NumberCharset[math.random(1, #NumberCharset)]
+	end
+	return value
+end
+
+local function getRandomLetter(length)
+	local value = ''
+	for i = 1, length do
+		value = value .. Charset[math.random(1, #Charset)]
+	end
+	return value
+end
+
+local function normalizePlate(plate)
+	if type(plate) ~= 'string' then
+		return nil
+	end
+
+	plate = plate:gsub("^%s+", ""):gsub("%s+$", ""):upper()
+	if plate == "" or #plate > 8 then
+		return nil
+	end
+
+	return plate
+end
+
+local function generateServerPlate()
+	for i = 1, 30 do
+		local plate = string.upper(getRandomLetter(Config.PlateLetters) .. (Config.PlateUseSpace and ' ' or '') .. getRandomNumber(Config.PlateNumbers))
+		local owned = MySQL.scalar.await('SELECT plate FROM owned_vehicles WHERE plate = ?', {plate})
+		local rented = MySQL.scalar.await('SELECT plate FROM rented_vehicles WHERE plate = ?', {plate})
+		if not owned and not rented then
+			return plate
+		end
+	end
+
+	return nil
+end
+
+local function isNear(source, coords, distance)
+	local ped = GetPlayerPed(source)
+	if not ped or ped == 0 then
+		return false
+	end
+
+	return #(GetEntityCoords(ped) - coords) <= distance
+end
+
+local function getValidCount(count)
+	count = tonumber(count)
+	if not count then
+		return nil
+	end
+
+	count = ESX.Math.Round(count)
+	if count <= 0 then
+		return nil
+	end
+
+	return count
+end
+
+local function canUseCardealerStock(xPlayer, source)
+	return xPlayer and xPlayer.getJob().name == 'cardealer' and isNear(source, Config.Zones.BossActions.Pos, 8.0)
+end
 
 CreateThread(function()
 	exports["esx_society"]:registerSociety('cardealer', TranslateCap('car_dealer'), 'society_cardealer', 'society_cardealer', 'society_cardealer', {type = 'private'})
@@ -48,9 +121,16 @@ RegisterNetEvent('esx_vehicleshop:setVehicleOwnedPlayerId')
 AddEventHandler('esx_vehicleshop:setVehicleOwnedPlayerId', function(playerId, vehicleProps, model, label)
 	local xPlayer, xTarget = ESX.Player(source), ESX.Player(playerId)
 
-	if xPlayer.getJob().name ~= 'cardealer' or not xTarget then
+	if not xPlayer or xPlayer.getJob().name ~= 'cardealer' or not xTarget or type(vehicleProps) ~= 'table' or not getVehicleFromModel(model) or not isNear(source, Config.Zones.ShopInside.Pos, 30.0) then
 		return
 	end
+	local plate = generateServerPlate()
+	if not plate then
+		return
+	end
+	vehicleProps.plate = plate
+	vehicleProps.model = joaat(model)
+
 	local xTargetName = xTarget.getName()
 	MySQL.scalar('SELECT id FROM cardealer_vehicles WHERE vehicle = ?', {model},
 	function(id)
@@ -73,7 +153,7 @@ AddEventHandler('esx_vehicleshop:setVehicleOwnedPlayerId', function(playerId, ve
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:getSoldVehicles', function(source, cb)
+xLib.callback.registerCompat('esx_vehicleshop:getSoldVehicles', function(source, cb)
 	MySQL.query('SELECT client, model, plate, soldby, date FROM vehicle_sold ORDER BY DATE DESC', function(result)
 		cb(result)
 	end)
@@ -111,6 +191,12 @@ RegisterNetEvent('esx_vehicleshop:getStockItem')
 AddEventHandler('esx_vehicleshop:getStockItem', function(itemName, count)
 	local source = source
 	local xPlayer = ESX.Player(source)
+	count = getValidCount(count)
+
+	if not count or not canUseCardealerStock(xPlayer, source) then
+		print(('[^3WARNING^7] Player ^5%s^7 attempted invalid cardealer stock withdrawal!'):format(source))
+		return
+	end
 
 	TriggerEvent('esx_addoninventory:getSharedInventory', 'society_cardealer', function(inventory)
 		local item = inventory.getItem(itemName)
@@ -135,11 +221,18 @@ RegisterNetEvent('esx_vehicleshop:putStockItems')
 AddEventHandler('esx_vehicleshop:putStockItems', function(itemName, count)
 	local source = source
 	local xPlayer = ESX.Player(source)
+	count = getValidCount(count)
+
+	if not count or not canUseCardealerStock(xPlayer, source) then
+		print(('[^3WARNING^7] Player ^5%s^7 attempted invalid cardealer stock deposit!'):format(source))
+		return
+	end
 
 	TriggerEvent('esx_addoninventory:getSharedInventory', 'society_cardealer', function(inventory)
 		local item = inventory.getItem(itemName)
+		local sourceItem = xPlayer.getInventoryItem(itemName)
 
-		if item.count >= 0 then
+		if sourceItem and sourceItem.count >= count then
 			xPlayer.removeInventoryItem(itemName, count)
 			inventory.addItem(itemName, count)
 			xPlayer.showNotification(TranslateCap('have_deposited', count, item.label))
@@ -149,9 +242,15 @@ AddEventHandler('esx_vehicleshop:putStockItems', function(itemName, count)
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:buyVehicle', function(source, cb, model, plate)
+xLib.callback.registerCompat('esx_vehicleshop:buyVehicle', function(source, cb, model, plate)
 	local xPlayer = ESX.Player(source)
-	local modelPrice = getVehicleFromModel(model).price
+	local vehicleData = type(model) == 'string' and getVehicleFromModel(model)
+	local modelPrice = vehicleData and tonumber(vehicleData.price)
+	plate = generateServerPlate()
+
+	if not xPlayer or not modelPrice or not plate or not isNear(source, Config.Zones.ShopInside.Pos, 30.0) then
+		return cb(false)
+	end
 
 	if modelPrice and xPlayer.getMoney() >= modelPrice then
 		xPlayer.removeMoney(modelPrice, "Vehicle Purchase")
@@ -172,13 +271,13 @@ ESX.RegisterServerCallback('esx_vehicleshop:buyVehicle', function(source, cb, mo
 	end
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:getCommercialVehicles', function(source, cb)
+xLib.callback.registerCompat('esx_vehicleshop:getCommercialVehicles', function(source, cb)
 	MySQL.query('SELECT price, vehicle FROM cardealer_vehicles ORDER BY vehicle ASC', function(result)
 		cb(result)
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:buyCarDealerVehicle', function(source, cb, model)
+xLib.callback.registerCompat('esx_vehicleshop:buyCarDealerVehicle', function(source, cb, model)
 	local xPlayer = ESX.Player(source)
 
 	if xPlayer.getJob().name ~= 'cardealer' then
@@ -234,7 +333,7 @@ AddEventHandler('esx_vehicleshop:returnProvider', function(vehicleModel)
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:getRentedVehicles', function(source, cb)
+xLib.callback.registerCompat('esx_vehicleshop:getRentedVehicles', function(source, cb)
 	MySQL.query('SELECT * FROM rented_vehicles ORDER BY player_name ASC', function(result)
 		local vehicles = {}
 
@@ -251,7 +350,7 @@ ESX.RegisterServerCallback('esx_vehicleshop:getRentedVehicles', function(source,
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:giveBackVehicle', function(source, cb, plate)
+xLib.callback.registerCompat('esx_vehicleshop:giveBackVehicle', function(source, cb, plate)
 	MySQL.single('SELECT base_price, vehicle FROM rented_vehicles WHERE plate = ?', {plate},
 	function(result)
 		if not result then
@@ -268,7 +367,7 @@ ESX.RegisterServerCallback('esx_vehicleshop:giveBackVehicle', function(source, c
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:resellVehicle', function(source, cb, plate, model)
+xLib.callback.registerCompat('esx_vehicleshop:resellVehicle', function(source, cb, plate, model)
 	local xPlayer, resellPrice = ESX.Player(source)
 
 	if xPlayer.getJob().name == 'cardealer' or not Config.EnablePlayerManagement then
@@ -313,27 +412,32 @@ ESX.RegisterServerCallback('esx_vehicleshop:resellVehicle', function(source, cb,
 	end
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:getStockItems', function(source, cb)
+xLib.callback.registerCompat('esx_vehicleshop:getStockItems', function(source, cb)
+	local xPlayer = ESX.Player(source)
+	if not canUseCardealerStock(xPlayer, source) then
+		return cb({})
+	end
+
 	TriggerEvent('esx_addoninventory:getSharedInventory', 'society_cardealer', function(inventory)
 		cb(inventory.items)
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:getPlayerInventory', function(source, cb)
+xLib.callback.registerCompat('esx_vehicleshop:getPlayerInventory', function(source, cb)
 	local xPlayer = ESX.Player(source)
 	local items = xPlayer.getInventory(true)
 
 	cb({items = items})
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:isPlateTaken', function(source, cb, plate)
+xLib.callback.registerCompat('esx_vehicleshop:isPlateTaken', function(source, cb, plate)
 	MySQL.scalar('SELECT plate FROM owned_vehicles WHERE plate = ?', {plate},
 	function(result)
 		cb(result ~= nil)
 	end)
 end)
 
-ESX.RegisterServerCallback('esx_vehicleshop:retrieveJobVehicles', function(source, cb, type)
+xLib.callback.registerCompat('esx_vehicleshop:retrieveJobVehicles', function(source, cb, type)
 	local xPlayer = ESX.Player(source)
 
 	MySQL.query('SELECT * FROM owned_vehicles WHERE owner = ? AND type = ? AND job = ?', {xPlayer.getIdentifier(), type, xPlayer.getJob().name},

@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
+<<<<<<< HEAD
 import { MdStarBorder, MdEdit } from 'react-icons/md';
+=======
+import { MdStar, MdStarBorder, MdEdit } from 'react-icons/md';
+>>>>>>> upstream-1142/1.14.2
 import type { Vehicle } from '@/types/vehicle.types';
 import { useGarageStore } from '@/store/garage.store';
 import { getVehicleImagePath } from '@/utils/vehicle';
@@ -153,6 +157,7 @@ const StatusIndicator = styled.div<{ $impounded?: boolean }>`
   margin-left: auto;
 `;
 
+<<<<<<< HEAD
 const PriceTag = styled.div`
   background: ${(props) => props.theme.colors.secondary};
   color: ${(props) => props.theme.colors.text.primary};
@@ -162,6 +167,8 @@ const PriceTag = styled.div`
   font-weight: ${(props) => props.theme.fonts.weights.bold};
 `;
 
+=======
+>>>>>>> upstream-1142/1.14.2
 const RenameInput = styled.input`
   background: ${(props) => props.theme.colors.backgroundSecondary};
   border: 1px solid ${(props) => props.theme.colors.primary};
@@ -203,10 +210,17 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) =>
     }
   };
 
+<<<<<<< HEAD
   const formatMileage = (mileage: number) => {
     // Convert to miles (1 km = 0.621371 miles)
     const miles = (mileage * 0.621371) / 1000;
     return `${miles.toFixed(1)} miles`;
+=======
+  const formatMileage = (mileage: number, unit: 'mi' | 'km' = 'mi') => {
+    const value = Number(mileage);
+    const distance = Number.isFinite(value) ? value : 0;
+    return `${distance.toFixed(1)} ${unit}`;
+>>>>>>> upstream-1142/1.14.2
   };
 
   return (
@@ -247,7 +261,11 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) =>
               <DetailText>{vehicle.plate}</DetailText>
             </DetailBadge>
             <DetailBadge>
+<<<<<<< HEAD
               <DetailText>{formatMileage(vehicle.mileage)}</DetailText>
+=======
+              <DetailText>{formatMileage(vehicle.mileage, vehicle.mileageUnit)}</DetailText>
+>>>>>>> upstream-1142/1.14.2
             </DetailBadge>
           </VehicleDetails>
         </VehicleInfo>
@@ -258,7 +276,11 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) =>
             onClick={handleFavoriteClick}
             title="Toggle Favorite"
           >
+<<<<<<< HEAD
             <MdStarBorder />
+=======
+            {vehicle.isFavorite ? <MdStar /> : <MdStarBorder />}
+>>>>>>> upstream-1142/1.14.2
           </ActionButton>
           <ActionButton onClick={handleRenameClick} title="Rename Vehicle">
             <MdEdit />
@@ -267,7 +289,10 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) =>
       </InfoContainer>
 
       <BottomContainer>
+<<<<<<< HEAD
         {(vehicle.impoundFee ?? 0) > 0 && <PriceTag>${vehicle.impoundFee}</PriceTag>}
+=======
+>>>>>>> upstream-1142/1.14.2
         {vehicle.impounded ? (
           <StatusIndicator $impounded>Impounded</StatusIndicator>
         ) : (
