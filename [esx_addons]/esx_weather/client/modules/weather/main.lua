@@ -3,7 +3,6 @@ Modules.Weather = Modules.Weather or {}
 Modules.Weather.ByZone = false ---@type table<Zone, WeatherType> | false
 Modules.Weather.currentType = false ---@type WeatherType | false
 Modules.Weather.isSyncEnabled = true
-
 Modules.Weather.transitionTarget = false ---@type WeatherType | false
 Modules.Weather.transitionEnd = 0 ---@type integer
 

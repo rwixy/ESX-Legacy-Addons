@@ -94,11 +94,11 @@ const UIController = (() => {
 
         const name = document.createElement('h2');
         name.className = 'current-zone-name';
-        name.textContent = zoneName;
+        name.textContent = safeZoneName;
 
         const weather = document.createElement('span');
         weather.className = 'current-zone-weather';
-        weather.textContent = `${weatherType} ${UIText.WEATHER_SUFFIX}`;
+        weather.textContent = `${safeWeatherType} ${UIText.WEATHER_SUFFIX}`;
 
         details.appendChild(label);
         details.appendChild(name);
