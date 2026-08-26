@@ -23,12 +23,9 @@ end)
 
 Citizen.CreateThread(function()
     while (not ESX.PlayerLoaded) do Citizen.Wait(0) end
-<<<<<<< HEAD
-=======
     while (not Modules.Weather.ByZone) do Citizen.Wait(0) end
 
     SetMillisecondsPerGameMinute(Config.Time.secondsPerGameMinute * 1000)
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 
     while (true) do
         Modules.Time.tick()
@@ -37,11 +34,7 @@ Citizen.CreateThread(function()
     end
 end)
 
-<<<<<<< HEAD
-RegisterCommand("weathersync", function()
-=======
 RegisterCommand(Config.panelCommand, function()
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
     if (not Config.AdminGroups[ESX.PlayerData.group]) then
         return
     end
@@ -49,14 +42,7 @@ RegisterCommand(Config.panelCommand, function()
     if (not Modules.Weather.ByZone or not Modules.Weather.currentType) then return end
 
     Modules.NUI.show(Modules.Zone.getClosest(), Modules.Weather.currentType, Modules.Weather.ByZone)
-<<<<<<< HEAD
-end)
-
-exports("ToggleWeatherSync", Modules.Weather.toggleSync)
-exports("ToggleTimeSync", Modules.Time.toggleSync)
-=======
 end, false)
 
 exports("ToggleWeatherSync", Modules.Weather.toggleSync)
 exports("ToggleTimeSync", Modules.Time.toggleSync)
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)

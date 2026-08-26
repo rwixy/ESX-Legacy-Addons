@@ -1,10 +1,6 @@
 fx_version "cerulean"
 game "gta5"
-<<<<<<< HEAD
-author "Kenshin13"
-=======
 author "ESX-Framework"
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 description "Weather sync for your ESX server"
 version "1.0.0"
 legacyversion "1.13.4"

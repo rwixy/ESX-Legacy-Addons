@@ -8,11 +8,7 @@ Shared.Class = Shared.Class or {}
 
 ---@class Time:SerializedTime
 ---@field new fun(self: Time, SerializedTime:SerializedTime): Time
-<<<<<<< HEAD
----@field add fun(self: Time, SerializedTime:SerializedTime)
-=======
 ---@field add fun(self: Time, SerializedTime:SerializedTime): SerializedTime
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 ---@field serialize fun(self: Time): SerializedTime
 Shared.Class.Time = {}
 
@@ -38,11 +34,8 @@ function Shared.Class.Time:add(SerializedTime)
     self.seconds = self.seconds % 60
     self.minutes = self.minutes % 60
     self.hours = self.hours % 24
-<<<<<<< HEAD
-=======
 
     return self:serialize()
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 end
 
 function Shared.Class.Time:serialize()

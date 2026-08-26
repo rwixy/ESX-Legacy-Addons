@@ -16,10 +16,7 @@
 
 Config = {
     debug       = false,
-<<<<<<< HEAD
-=======
     panelCommand = "weatherpanel",
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
     AdminGroups = {
         admin = true,
         moderator = true,
@@ -40,8 +37,6 @@ Config = {
             Shared.Enum.WeatherType.RAIN,
             Shared.Enum.WeatherType.SMOG,
             Shared.Enum.WeatherType.THUNDER,
-<<<<<<< HEAD
-=======
 	        Shared.Enum.WeatherType.CLEARING,
             Shared.Enum.WeatherType.XMAS,
             Shared.Enum.WeatherType.SNOW,
@@ -51,7 +46,6 @@ Config = {
             Shared.Enum.WeatherType.NEUTRAL,
             Shared.Enum.WeatherType.RAIN_HALLOWEEN,
             Shared.Enum.WeatherType.SNOW_HALLOWEEN,
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
         },
         transitionTimeSeconds = 30,
         cycleTimeSeconds = 60 * 30 -- 30 minutes

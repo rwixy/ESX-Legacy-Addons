@@ -37,8 +37,6 @@ RegisterNUICallback("setZoneWeather", function(Data, cb)
     cb(true)
 end)
 
-<<<<<<< HEAD
-=======
 ---@param Data {zoneName: Zone, time: Time}
 ---@param cb fun(success:boolean)
 RegisterNUICallback("setZoneTime", function(Data, cb)
@@ -46,7 +44,6 @@ RegisterNUICallback("setZoneTime", function(Data, cb)
     cb(true)
 end)
 
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 ---@param _ nil
 ---@param cb fun(success:boolean)
 RegisterNUICallback("close", function(_, cb)

@@ -13,11 +13,6 @@ RegisterNetEvent("esx_weather:server:setZoneWeather", function(zone, weatherType
         return
     end
 
-<<<<<<< HEAD
-    Modules.Weather.setZone(zone, weatherType)
-end)
-
-=======
     local isValidWeather = false
     for _, validType in ipairs(Config.Weather.ValidTypes) do
         if validType == weatherType then
@@ -47,7 +42,6 @@ RegisterNetEvent("esx_weather:server:setZoneTime", function(zone)
     Shared.Modules.Debug.print(("Time set requested for zone %s by player %s (not implemented)"):format(tostring(zone), tostring(src)))
 end)
 
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 ---@param src integer
 AddEventHandler("esx:playerLoaded", function(src)
     Modules.Weather.broadcastZones(src)
@@ -57,8 +51,4 @@ end)
 Citizen.SetTimeout(1000, function()
     Modules.Weather.broadcastZones()
     Modules.Time.broadcast()
-<<<<<<< HEAD
 end)
-=======
-end)
->>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
