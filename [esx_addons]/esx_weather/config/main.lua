@@ -37,7 +37,7 @@ Config = {
             Shared.Enum.WeatherType.RAIN,
             Shared.Enum.WeatherType.SMOG,
             Shared.Enum.WeatherType.THUNDER,
-	    Shared.Enum.WeatherType.CLEARING,
+	        Shared.Enum.WeatherType.CLEARING,
             Shared.Enum.WeatherType.XMAS,
             Shared.Enum.WeatherType.SNOW,
             Shared.Enum.WeatherType.SNOWLIGHT,
