@@ -4,6 +4,12 @@ Modules.Weather.ByZone = false ---@type table<Zone, WeatherType> | false
 Modules.Weather.currentType = false ---@type WeatherType | false
 Modules.Weather.isSyncEnabled = true
 
+<<<<<<< HEAD
+=======
+Modules.Weather.transitionTarget = false ---@type WeatherType | false
+Modules.Weather.transitionEnd = 0 ---@type integer
+
+>>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
 ---@param toggle boolean
 function Modules.Weather.toggleSync(toggle)
     assert(type(toggle) == "boolean", "toggle must be a boolean")
@@ -22,7 +28,22 @@ function Modules.Weather.tick()
         return
     end
 
+<<<<<<< HEAD
     Shared.Modules.Debug.print(("Entered zone %s. Changing weather: %s -> %s"):format(currentZone, Modules.Weather.currentType or "NONE", zoneWeather))
     Modules.Weather.currentType = zoneWeather
     SetWeatherTypeOvertimePersist(zoneWeather, Config.Weather.transitionTimeSeconds * 1.0)
 end
+=======
+    if zoneWeather == Modules.Weather.transitionTarget and GetGameTimer() < Modules.Weather.transitionEnd then
+        return
+    end
+
+    ClearWeatherTypePersist()
+
+    Shared.Modules.Debug.print(("Entered zone %s. Changing weather: %s -> %s"):format(currentZone, Modules.Weather.currentType or "NONE", zoneWeather))
+    Modules.Weather.currentType = zoneWeather
+    Modules.Weather.transitionTarget = zoneWeather
+    Modules.Weather.transitionEnd = GetGameTimer() + (Config.Weather.transitionTimeSeconds * 1000)
+    SetWeatherTypeOvertimePersist(zoneWeather, Config.Weather.transitionTimeSeconds * 1.0)
+end
+>>>>>>> d11cac7 (feat: Implement ESX Weather Admin Panel with modular architecture)
