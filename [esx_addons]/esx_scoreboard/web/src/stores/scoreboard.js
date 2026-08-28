@@ -57,13 +57,23 @@ const initialState = {
   logoUrl: ""
 }
 
+/**
+ * Core writable store holding the full scoreboard state.
+ * @type {import("svelte/store").Writable<ScoreboardState>}
+ */
 export const scoreboardStore = writable(initialState)
 
+/**
+ * Derived store that returns the player list filtered by search query
+ * and sorted by the current sort column/direction.
+ * Re-computes whenever players, searchQuery, sortBy, or sortAsc change.
+ * @type {import("svelte/store").Readable<PlayerData[]>}
+ */
 export const filteredPlayers = derived(scoreboardStore, ($state) => {
   let players = [...$state.players]
 
-  if ($state.searchQuery) {
-    const query = $state.searchQuery.toLowerCase()
+  const query = $state.searchQuery.trim().toLowerCase()
+  if (query) {
     players = players.filter((p) =>
       p.name.toLowerCase().includes(query) ||
       p.job.toLowerCase().includes(query) ||
@@ -88,12 +98,20 @@ export const filteredPlayers = derived(scoreboardStore, ($state) => {
   return players
 })
 
+/**
+ * Derived store exposing the total number of connected players.
+ * @type {import("svelte/store").Readable<number>}
+ */
 export const totalPlayers = derived(scoreboardStore, ($state) => $state.players.length)
 
-export const activeActivities = derived(scoreboardStore, ($state) => $state.activities.length)
+/**
+ * Derived store exposing the count of currently active activities/events.
+ * @type {import("svelte/store").Readable<number>}
+ */
+export const activeActivityCount = derived(scoreboardStore, ($state) => $state.activities.length)
 
 /**
- * Update scoreboard visibility
+ * Update scoreboard visibility.
  * @param {boolean} visible
  */
 export function setVisible(visible) {
@@ -101,7 +119,7 @@ export function setVisible(visible) {
 }
 
 /**
- * Update players list
+ * Update the full players list.
  * @param {PlayerData[]} players
  */
 export function setPlayers(players) {
@@ -109,7 +127,7 @@ export function setPlayers(players) {
 }
 
 /**
- * Update jobs list
+ * Update the job counts list.
  * @param {JobCount[]} jobs
  */
 export function setJobs(jobs) {
@@ -117,7 +135,7 @@ export function setJobs(jobs) {
 }
 
 /**
- * Update activities
+ * Update the active activities list.
  * @param {ActivityData[]} activities
  */
 export function setActivities(activities) {
@@ -125,7 +143,7 @@ export function setActivities(activities) {
 }
 
 /**
- * Set search query
+ * Set the current search query used to filter the player list.
  * @param {string} query
  */
 export function setSearchQuery(query) {
@@ -133,7 +151,7 @@ export function setSearchQuery(query) {
 }
 
 /**
- * Set sort column
+ * Set the sort column. Toggles sort direction if the same column is selected again.
  * @param {string} column
  */
 export function setSortBy(column) {
@@ -145,13 +163,49 @@ export function setSortBy(column) {
 }
 
 /**
- * Update server info
+ * Update server info fields (name, max players, uptime, logo).
+ * Only overwrites keys present in the passed object; preserves existing values for missing keys.
  * @param {Object} info
- * @param {string} info.serverName
- * @param {number} info.maxPlayers
- * @param {number} info.uptime
- * @param {string} info.logoUrl
+ * @param {string} [info.serverName]
+ * @param {number} [info.maxPlayers]
+ * @param {number} [info.uptime]
+ * @param {string} [info.logoUrl]
  */
 export function setServerInfo(info) {
-  scoreboardStore.update((s) => ({ ...s, ...info }))
+  scoreboardStore.update((s) => ({
+    ...s,
+    serverName: info.serverName ?? s.serverName,
+    maxPlayers: info.maxPlayers ?? s.maxPlayers,
+    uptime: info.uptime ?? s.uptime,
+    logoUrl: info.logoUrl ?? s.logoUrl
+  }))
+}
+
+/**
+ * Batch-ingest a full server payload in a single store update.
+ * Use this when receiving a consolidated data packet from the server
+ * to avoid triggering multiple separate store writes.
+ * @param {Object} data
+ * @param {PlayerData[]} [data.players]
+ * @param {JobCount[]} [data.jobs]
+ * @param {ActivityData[]} [data.activities]
+ * @param {Object} [data.info]
+ * @param {string} [data.info.serverName]
+ * @param {number} [data.info.maxPlayers]
+ * @param {number} [data.info.uptime]
+ * @param {string} [data.info.logoUrl]
+ */
+export function ingestServerPayload(data) {
+  scoreboardStore.update((s) => ({
+    ...s,
+    ...(data.players && { players: data.players }),
+    ...(data.jobs && { jobs: data.jobs }),
+    ...(data.activities && { activities: data.activities }),
+    ...(data.info && {
+      serverName: data.info.serverName ?? s.serverName,
+      maxPlayers: data.info.maxPlayers ?? s.maxPlayers,
+      uptime: data.info.uptime ?? s.uptime,
+      logoUrl: data.info.logoUrl ?? s.logoUrl
+    })
+  }))
 }
