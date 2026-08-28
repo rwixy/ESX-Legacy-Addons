@@ -27,6 +27,7 @@ end)
 --- Register NUI callback to close scoreboard from UI
 RegisterNUICallback("closeScoreboard", function(data, cb)
   ScoreboardModule.CloseScoreboard()
+  TriggerServerEvent("esx_scoreboard:server:close")
   cb({})
 end)
 

@@ -238,37 +238,36 @@ function ScoreboardModule.SendToClient(source)
   )
 end
 
+--- Track clients that have the scoreboard open
+local activeClients = {}
+
 --- Register server event for data request
-RegisterServerEvent("esx_scoreboard:server:requestData")
-AddEventHandler("esx_scoreboard:server:requestData", function()
-  local source = source
-  ScoreboardModule.SendToClient(source)
+RegisterNetEvent("esx_scoreboard:server:requestData", function()
+    local src = source
+    activeClients[src] = true
+    ScoreboardModule.SendToClient(src)
 end)
 
---- Register server event for activity registration from other resources
-RegisterServerEvent("esx_scoreboard:server:addActivity")
-AddEventHandler("esx_scoreboard:server:addActivity", function(activityType, label, location, players)
-  ScoreboardModule.AddActivity(activityType, label, location, players)
+--- Client explicitly closed scoreboard (call this from client when closing)
+RegisterNetEvent("esx_scoreboard:server:close", function()
+    activeClients[source] = nil
 end)
 
---- Register server event for activity removal
-RegisterServerEvent("esx_scoreboard:server:removeActivity")
-AddEventHandler("esx_scoreboard:server:removeActivity", function(activityId)
-  ScoreboardModule.RemoveActivity(activityId)
-end)
+--- Broadcast only to clients that actually have the scoreboard open
+function ScoreboardModule.BroadcastUpdate()
+    cachedPlayers = ScoreboardModule.GetAllPlayers()
+    cachedJobs = ScoreboardModule.GetJobCounts()
+    local info = ScoreboardModule.GetServerInfo()
 
---- Thread to periodically broadcast updates
-CreateThread(function()
-  while true do
-    Wait(Config.UpdateInterval)
-    ScoreboardModule.BroadcastUpdate()
-  end
-end)
+    for clientId, _ in pairs(activeClients) do
+        TriggerClientEvent("esx_scoreboard:client:receiveData", clientId,
+            cachedPlayers, cachedJobs, cachedActivities, info)
+    end
+end
 
---- Handle player dropped
+--- Handle player dropped — just clean up tracking, don't broadcast
 AddEventHandler("playerDropped", function(reason)
-  Wait(500)
-  ScoreboardModule.BroadcastUpdate()
+    activeClients[source] = nil
 end)
 
 --- Export for other resources to add activities
