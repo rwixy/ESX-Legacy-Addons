@@ -16,6 +16,17 @@ local lastRequest = {}
 
 local broadcastPending = false
 
+--- Player / job cache
+local playerCache = nil
+local jobCache = nil
+local cacheDirty = true
+local cachedPlayerCount = 0
+
+--- Mark player/job caches as stale
+local function InvalidateCache()
+  cacheDirty = true
+end
+
 local function DeferredBroadcast()
   if broadcastPending then return end
   broadcastPending = true
@@ -33,7 +44,6 @@ function ScoreboardModule.GetUptime()
 end
 
 --- Get configured max players
---- Uses Config.MaxPlayers if set, otherwise falls back to sv_maxclients convar
 --- @return number
 function ScoreboardModule.GetMaxPlayers()
   if Config.MaxPlayers and Config.MaxPlayers > 0 then
@@ -65,10 +75,20 @@ function ScoreboardModule.GetServerInfo()
   }
 end
 
---- Get all connected players data
---- Uses ESX character name instead of FiveM steam name
+--- Get all connected players data (cached)
+--- Rebuilds only when cache is dirty or player count changed.
+--- Pings are refreshed every call since they change constantly.
 --- @return table
 function ScoreboardModule.GetAllPlayers()
+  local currentCount = #GetPlayers()
+
+  if not cacheDirty and playerCache and cachedPlayerCount == currentCount then
+    for _, player in ipairs(playerCache) do
+      player.ping = GetPlayerPing(player.serverId) or 0
+    end
+    return playerCache
+  end
+
   local players = {}
   local allPlayers = GetPlayers()
 
@@ -91,12 +111,19 @@ function ScoreboardModule.GetAllPlayers()
     end
   end
 
+  playerCache = players
+  cachedPlayerCount = currentCount
   return players
 end
 
---- Get job counts
+--- Get job counts (cached)
+--- Rebuilds only when player cache is dirty.
 --- @return table
 function ScoreboardModule.GetJobCounts()
+  if not cacheDirty and jobCache then
+    return jobCache
+  end
+
   local jobs = {}
   local allPlayers = GetPlayers()
 
@@ -124,6 +151,8 @@ function ScoreboardModule.GetJobCounts()
 
   table.sort(jobArray, function(a, b) return a.count > b.count end)
 
+  jobCache = jobArray
+  cacheDirty = false
   return jobArray
 end
 
@@ -215,13 +244,13 @@ end
 --- Send data to specific client
 --- @param source number
 function ScoreboardModule.SendToClient(source)
-  cachedPlayers = ScoreboardModule.GetAllPlayers()
-  cachedJobs = ScoreboardModule.GetJobCounts()
+  local players = ScoreboardModule.GetAllPlayers()
+  local jobs = ScoreboardModule.GetJobCounts()
   local info = ScoreboardModule.GetServerInfo()
 
   TriggerClientEvent("esx_scoreboard:client:receiveData", source,
-    cachedPlayers,
-    cachedJobs,
+    players,
+    jobs,
     cachedActivities,
     info
   )
@@ -241,27 +270,38 @@ RegisterNetEvent("esx_scoreboard:server:requestData", function()
     ScoreboardModule.SendToClient(src)
 end)
 
---- Client explicitly closed scoreboard (call this from client when closing)
+--- Client explicitly closed scoreboard
 RegisterNetEvent("esx_scoreboard:server:close", function()
     activeClients[source] = nil
 end)
 
 --- Broadcast only to clients that actually have the scoreboard open
 function ScoreboardModule.BroadcastUpdate()
-    cachedPlayers = ScoreboardModule.GetAllPlayers()
-    cachedJobs = ScoreboardModule.GetJobCounts()
+    local players = ScoreboardModule.GetAllPlayers()
+    local jobs = ScoreboardModule.GetJobCounts()
     local info = ScoreboardModule.GetServerInfo()
 
     for clientId, _ in pairs(activeClients) do
         TriggerClientEvent("esx_scoreboard:client:receiveData", clientId,
-            cachedPlayers, cachedJobs, cachedActivities, info)
+            players, jobs, cachedActivities, info)
     end
 end
 
---- Handle player dropped — just clean up tracking, don't broadcast
+--- Handle player dropped — clean up tracking and invalidate cache
 AddEventHandler("playerDropped", function(reason)
     activeClients[source] = nil
     lastRequest[source] = nil
+    InvalidateCache()
+end)
+
+--- Invalidate cache when a new player connects
+AddEventHandler("playerConnecting", function()
+    InvalidateCache()
+end)
+
+--- Invalidate cache when a player changes job
+AddEventHandler("esx:setJob", function(source, job, lastJob)
+    InvalidateCache()
 end)
 
 --- Export for other resources to add activities
