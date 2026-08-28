@@ -58,9 +58,12 @@ CreateThread(function()
   while true do
     Wait(0)
     if ScoreboardModule.IsOpen() then
-      DisableControlAction(0, 1, true)
-      DisableControlAction(0, 2, true)
-      -- etc
+      DisableControlAction(0, 1, true)   -- look left/right
+      DisableControlAction(0, 2, true)   -- look up/down
+      DisableControlAction(0, 142, true) -- melee attack
+      DisableControlAction(0, 18, true)  -- attack
+      DisableControlAction(0, 322, true) -- ESC (already handled by disabled check)
+      DisableControlAction(0, 106, true) -- mouse click in vehicle
       if IsDisabledControlJustReleased(0, 322) then
         ScoreboardModule.CloseScoreboard()
       end
