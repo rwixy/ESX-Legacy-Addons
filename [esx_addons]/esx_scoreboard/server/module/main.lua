@@ -23,6 +23,18 @@ local serverStartTime = os.time()
 --- Resource name
 local RESOURCE_NAME <const> = GetCurrentResourceName()
 
+local broadcastPending = false
+
+local function DeferredBroadcast()
+  if broadcastPending then return end
+  broadcastPending = true
+  CreateThread(function()
+    Wait(500)
+    broadcastPending = false
+    ScoreboardModule.BroadcastUpdate()
+  end)
+end
+
 --- Get current server uptime in seconds
 --- @return number
 function ScoreboardModule.GetUptime()
@@ -174,7 +186,7 @@ function ScoreboardModule.AddActivity(activityType, label, location, players)
   }
 
   table.insert(cachedActivities, activity)
-  ScoreboardModule.BroadcastUpdate()
+  DeferredBroadcast()
 
   return activity.id
 end
@@ -185,7 +197,7 @@ function ScoreboardModule.RemoveActivity(activityId)
   for i, activity in ipairs(cachedActivities) do
     if activity.id == activityId then
       table.remove(cachedActivities, i)
-      ScoreboardModule.BroadcastUpdate()
+      DeferredBroadcast()
       return true
     end
   end
@@ -201,26 +213,11 @@ function ScoreboardModule.UpdateActivity(activityId, data)
       for key, value in pairs(data) do
         activity[key] = value
       end
-      ScoreboardModule.BroadcastUpdate()
+      DeferredBroadcast()
       return true
     end
   end
   return false
-end
-
---- Broadcast full update to all clients
-function ScoreboardModule.BroadcastUpdate()
-  cachedPlayers = ScoreboardModule.GetAllPlayers()
-  cachedJobs = ScoreboardModule.GetJobCounts()
-
-  local info = ScoreboardModule.GetServerInfo()
-
-  TriggerClientEvent("esx_scoreboard:client:receiveData", -1,
-    cachedPlayers,
-    cachedJobs,
-    cachedActivities,
-    info
-  )
 end
 
 --- Send data to specific client

@@ -43,23 +43,24 @@ local function SendThemeUpdate()
   })
 end
 
---- Main thread for scoreboard
+
 CreateThread(function()
   while true do
-    Wait(0)
-
+    Wait(100)
     if IsControlJustReleased(0, Config.OpenKey) then
       ScoreboardModule.ToggleScoreboard()
     end
+  end
+end)
 
+-- Disable controls only when open
+CreateThread(function()
+  while true do
+    Wait(0)
     if ScoreboardModule.IsOpen() then
       DisableControlAction(0, 1, true)
       DisableControlAction(0, 2, true)
-      DisableControlAction(0, 142, true)
-      DisableControlAction(0, 18, true)
-      DisableControlAction(0, 322, true)
-      DisableControlAction(0, 106, true)
-
+      -- etc
       if IsDisabledControlJustReleased(0, 322) then
         ScoreboardModule.CloseScoreboard()
       end
