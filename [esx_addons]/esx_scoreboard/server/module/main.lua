@@ -4,12 +4,6 @@
 --- Module exports table
 local ScoreboardModule = {}
 
---- Cached player data
-local cachedPlayers = {}
-
---- Cached job counts
-local cachedJobs = {}
-
 --- Cached activities
 local cachedActivities = {}
 
@@ -267,6 +261,7 @@ end
 --- Handle player dropped — just clean up tracking, don't broadcast
 AddEventHandler("playerDropped", function(reason)
     activeClients[source] = nil
+    lastRequest[source] = nil
 end)
 
 --- Export for other resources to add activities

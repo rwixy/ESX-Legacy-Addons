@@ -5,17 +5,6 @@ local ScoreboardModule = xLib.require "client.module.main"
 
 local RESOURCE_NAME <const> = GetCurrentResourceName()
 
---- Register NUI callback for theme request
-RegisterNUICallback("getTheme", function(data, cb)
-  cb({
-    primaryColor = GetConvar("esx:ui:primaryColor", "#FB9B04"),
-    secondaryColor = GetConvar("esx:ui:secondaryColor", "#252525"),
-    backgroundColor = GetConvar("esx:ui:backgroundColor", "#161616"),
-    accentColor = GetConvar("esx:ui:accentColor", "#383838"),
-    logoUrl = GetConvar("esx:ui:logoUrl", "")
-  })
-end)
-
 --- Register NUI callback to close scoreboard from UI
 RegisterNUICallback("closeScoreboard", function(data, cb)
   ScoreboardModule.CloseScoreboard()
