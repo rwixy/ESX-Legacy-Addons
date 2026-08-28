@@ -78,6 +78,18 @@
         case "updateAll":
           ingestServerPayload(data)
           break
+        case "updateTheme":
+          {
+            const root = document.documentElement
+            if (data.primaryColor) root.style.setProperty("--primary-color", data.primaryColor)
+            if (data.secondaryColor) root.style.setProperty("--secondary-color", data.secondaryColor)
+            if (data.backgroundColor) root.style.setProperty("--background-color", data.backgroundColor)
+            if (data.accentColor) root.style.setProperty("--accent-color", data.accentColor)
+            if (data.logoUrl && /^https?:\/\//.test(data.logoUrl)) {
+              root.style.setProperty("--logo-url", `url(${data.logoUrl})`)
+            }
+          }
+          break
       }
     }
 
