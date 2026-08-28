@@ -20,16 +20,12 @@ client_scripts {
   "client/main.lua",
   "client/module/main.lua",
   "client/module/enum.lua",
-  "client/module/class.lua",
-  "client/module/util.lua"
+  "client/module/class.lua"
 }
 
 server_scripts {
   "server/main.lua",
-  "server/module/main.lua",
-  "server/module/enum.lua",
-  "server/module/class.lua",
-  "server/module/util.lua"
+  "server/module/main.lua"
 }
 
 ui_page "web/dist/index.html"
