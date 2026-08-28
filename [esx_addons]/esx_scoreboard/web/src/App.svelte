@@ -1,6 +1,6 @@
 <script>
   import Scoreboard from "./components/Scoreboard.svelte"
-  import { ingestServerPayload } from "./stores/scoreboard.js"
+  import { ingestServerPayload, setVisible } from "./stores/scoreboard.js"
   const mockData = {
     players: [
       { serverId: 1, name: "John_Doe", job: "police", jobGrade: "Sergeant", group: "admin", ping: 24, activity: "robbery" },
