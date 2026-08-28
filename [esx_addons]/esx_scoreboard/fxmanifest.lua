@@ -40,5 +40,6 @@ files {
 }
 
 dependency {
-  "esx_lib"
+  "esx_lib",
+  "es_extended"
 }

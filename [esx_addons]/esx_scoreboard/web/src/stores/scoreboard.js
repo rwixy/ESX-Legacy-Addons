@@ -58,6 +58,12 @@ const initialState = {
 }
 
 /**
+ * List of valid columns that can be used for sorting.
+ * @type {string[]}
+ */
+const VALID_COLUMNS = ["serverId", "name", "job", "ping"]
+
+/**
  * Core writable store holding the full scoreboard state.
  * @type {import("svelte/store").Writable<ScoreboardState>}
  */
@@ -155,6 +161,7 @@ export function setSearchQuery(query) {
  * @param {string} column
  */
 export function setSortBy(column) {
+  if (!VALID_COLUMNS.includes(column)) return
   scoreboardStore.update((s) => ({
     ...s,
     sortBy: column,

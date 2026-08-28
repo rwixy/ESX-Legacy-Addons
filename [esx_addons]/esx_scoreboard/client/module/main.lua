@@ -1,9 +1,7 @@
 --- @module client.module.main
 --- Client-side scoreboard module
 
-local Enum = xLib.require "client.module.enum"
 local ScoreboardClass = xLib.require "client.module.class"
-local Util = xLib.require "client.module.util"
 
 --- Module exports table
 local ScoreboardModule = {}

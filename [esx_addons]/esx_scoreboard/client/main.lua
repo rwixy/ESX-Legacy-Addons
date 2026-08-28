@@ -35,6 +35,11 @@ local function SendThemeUpdate()
   })
 end
 
+--- Register NUI callback for when the UI is fully mounted
+RegisterNUICallback("nuiReady", function(data, cb)
+  cb({})
+  SendThemeUpdate()
+end)
 
 CreateThread(function()
   while true do
@@ -63,7 +68,6 @@ CreateThread(function()
   end
 end)
 
-
 --- Thread to periodically refresh scoreboard data
 CreateThread(function()
   while true do
@@ -73,13 +77,6 @@ CreateThread(function()
       ScoreboardModule.RefreshData()
     end
   end
-end)
-
---- Listen for resource start
-AddEventHandler("onResourceStart", function(resourceName)
-  if resourceName ~= RESOURCE_NAME then return end
-  Wait(1000)
-  SendThemeUpdate()
 end)
 
 --- Handle resource stop
