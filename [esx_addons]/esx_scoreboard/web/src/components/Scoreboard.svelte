@@ -20,17 +20,6 @@
     if (currentSortBy !== key) return "↕"
     return currentSortAsc ? "↑" : "↓"
   }
-
-    window.addEventListener("message", handleMessage)
-
-    if (window.invokeNative) {
-      fetch("https://esx_scoreboard/getTheme", { method: "POST" })
-    }
-
-    return () => {
-      window.removeEventListener("message", handleMessage)
-    }
-  })
 </script>
 
 {#if $scoreboardStore.visible}
