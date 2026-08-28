@@ -121,28 +121,13 @@ end
 
 --- Register net event for full data update
 RegisterNetEvent("esx_scoreboard:client:receiveData", function(players, jobs, activities, info)
-  ScoreboardModule.UpdatePlayers(players)
-  ScoreboardModule.UpdateJobs(jobs)
-  ScoreboardModule.UpdateActivities(activities)
-
-  if type(info) == "table" then
-    ScoreboardModule.UpdateServerInfo(info)
-  end
-end)
-
---- Register net event for player update only
-RegisterNetEvent("esx_scoreboard:client:updatePlayers", function(players)
-  ScoreboardModule.UpdatePlayers(players)
-end)
-
---- Register net event for jobs update only
-RegisterNetEvent("esx_scoreboard:client:updateJobs", function(jobs)
-  ScoreboardModule.UpdateJobs(jobs)
-end)
-
---- Register net event for activities update only
-RegisterNetEvent("esx_scoreboard:client:updateActivities", function(activities)
-  ScoreboardModule.UpdateActivities(activities)
+  SendNUIMessage({
+    type = "updateAll",
+    players = players,
+    jobs = jobs,
+    activities = activities,
+    info = info
+  })
 end)
 
 return ScoreboardModule
