@@ -1,10 +1,6 @@
 --- @module server.module.main
 --- Server-side scoreboard module
 
-local Enum = xLib.require "server.module.enum"
-local ScoreboardClass = xLib.require "server.module.class"
-local Util = xLib.require "server.module.util"
-
 --- Module exports table
 local ScoreboardModule = {}
 
@@ -20,8 +16,9 @@ local cachedActivities = {}
 --- Server start time for uptime tracking
 local serverStartTime = os.time()
 
---- Resource name
-local RESOURCE_NAME <const> = GetCurrentResourceName()
+local nextActivityId = 1
+
+local lastRequest = {}
 
 local broadcastPending = false
 
@@ -177,7 +174,7 @@ end
 function ScoreboardModule.AddActivity(activityType, label, location, players)
   local configType = Config.ActivityTypes[activityType]
   local activity = {
-    id = #cachedActivities + 1,
+    id = nextActivityId,
     type = activityType,
     label = label or (configType and configType.label) or activityType,
     location = location,
@@ -185,6 +182,7 @@ function ScoreboardModule.AddActivity(activityType, label, location, players)
     players = players or {}
   }
 
+  nextActivityId = nextActivityId + 1
   table.insert(cachedActivities, activity)
   DeferredBroadcast()
 
@@ -241,6 +239,10 @@ local activeClients = {}
 --- Register server event for data request
 RegisterNetEvent("esx_scoreboard:server:requestData", function()
     local src = source
+    local now = os.time()
+    if lastRequest[src] and (now - lastRequest[src]) < 2 then return end
+    lastRequest[src] = now
+
     activeClients[src] = true
     ScoreboardModule.SendToClient(src)
 end)
