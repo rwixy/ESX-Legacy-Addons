@@ -30,7 +30,9 @@
         if (data.secondaryColor) root.style.setProperty("--secondary-color", data.secondaryColor)
         if (data.backgroundColor) root.style.setProperty("--background-color", data.backgroundColor)
         if (data.accentColor) root.style.setProperty("--accent-color", data.accentColor)
-        if (data.logoUrl) root.style.setProperty("--logo-url", `url(${data.logoUrl})`)
+        if (data.logoUrl && /^https?:\/\//.test(data.logoUrl)) {
+          root.style.setProperty("--logo-url", `url(${data.logoUrl})`)
+        }
       }
     }
 
