@@ -1,5 +1,5 @@
 <script>
-  import { totalPlayers, activeActivities } from "../stores/scoreboard.js"
+  import { totalPlayers, activeActivityCount } from "../stores/scoreboard.js"
 
   let { serverName, maxPlayers, uptime, logoUrl } = $props()
 
@@ -38,7 +38,7 @@
     </div>
     <div class="stat-divider"></div>
     <div class="stat-box activities">
-      <span class="stat-value">{$activeActivities}</span>
+      <span class="stat-value">{$activeActivityCount}</span>
       <span class="stat-label">Active Events</span>
     </div>
   </div>
