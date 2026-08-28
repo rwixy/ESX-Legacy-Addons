@@ -1,13 +1,6 @@
 <script>
   import Scoreboard from "./components/Scoreboard.svelte"
-  import {
-    setVisible,
-    setPlayers,
-    setJobs,
-    setActivities,
-    setServerInfo
-  } from "./stores/scoreboard.js"
-
+  import { ingestServerPayload } from "./stores/scoreboard.js"
   const mockData = {
     players: [
       { serverId: 1, name: "John_Doe", job: "police", jobGrade: "Sergeant", group: "admin", ping: 24, activity: "robbery" },
@@ -50,10 +43,7 @@
   }
 
   function loadMockData() {
-    setPlayers(mockData.players)
-    setJobs(mockData.jobs)
-    setActivities(mockData.activities)
-    setServerInfo(mockData.info)
+    ingestServerPayload(mockData)
     setVisible(true)
   }
 
@@ -85,23 +75,8 @@
         case "hide":
           setVisible(false)
           break
-        case "updatePlayers":
-          if (data.players) setPlayers(data.players)
-          break
-        case "updateJobs":
-          if (data.jobs) setJobs(data.jobs)
-          break
-        case "updateActivities":
-          if (data.activities) setActivities(data.activities)
-          break
-        case "updateServerInfo":
-          if (data.info) setServerInfo(data.info)
-          break
         case "updateAll":
-          if (data.players) setPlayers(data.players)
-          if (data.jobs) setJobs(data.jobs)
-          if (data.activities) setActivities(data.activities)
-          if (data.info) setServerInfo(data.info)
+          ingestServerPayload(data)
           break
       }
     }
