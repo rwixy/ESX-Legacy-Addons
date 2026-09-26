@@ -12,10 +12,12 @@ INSERT INTO `jobs` (name, label) VALUES
 	('lumberjack', 'Bûcheron'),
 	('fueler', 'Raffineur'),
 	('reporter', 'Journaliste'),
-	('tailor', 'Couturier')
+	('tailor', 'Couturier'),
+	('bus', 'Bus Driver')
 ;
 
 INSERT INTO `job_grades` (job_name, grade, name, label, salary, skin_male, skin_female) VALUES
+	('bus', 0, 'employee', 'Employee', 0, '{}', '{}'),
 	('lumberjack', 0, 'employee', 'Employee', 0, '{}', '{}'),
 	('fisherman', 0, 'employee', 'Employee', 0, '{}', '{}'),
 	('fueler', 0, 'employee', 'Employee', 0, '{}', '{}'),

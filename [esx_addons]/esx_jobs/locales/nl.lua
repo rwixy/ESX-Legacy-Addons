@@ -26,6 +26,8 @@ Locales['nl'] = {
   ['return_vh_button']          = 'Druk op ~INPUT_PICKUP~ om het voertuig terug te zetten',
   ['delivery_point']            = 'Afleverpunt',
   ['delivery']                  = 'Afleveren',
+  ['bus_stop']                  = 'Bushalte',
+  ['bus_stop_hint']             = 'Druk op ~INPUT_PICKUP~ om te stoppen en passagiers op te halen',
   ['public_enter']              = 'Druk op ~INPUT_PICKUP~ om het gebouw te betreden',
   ['public_leave']              = 'Druk op ~INPUT_PICKUP~ om het gebouw te verlaten',
 

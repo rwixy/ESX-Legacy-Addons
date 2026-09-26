@@ -29,6 +29,8 @@ Locales['es'] = {
   ['return_vh_button'] = 'presiona ~INPUT_PICKUP~ para devolver vehiculo.',
   ['delivery_point'] = 'punto de entrega',
   ['delivery'] = 'entrega',
+  ['bus_stop'] = 'parada de autobus',
+  ['bus_stop_hint'] = 'presiona ~INPUT_PICKUP~ para parar y recoger pasajeros.',
   ['public_enter'] = 'presiona ~INPUT_PICKUP~ para entrar al edificio.',
   ['public_leave'] = 'presiona ~INPUT_PICKUP~ para ir a la entrada del edificio.',
 

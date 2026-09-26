@@ -31,6 +31,8 @@ Locales['en'] = {
   ['return_vh_button'] = 'press ~INPUT_PICKUP~ to return the vehicle.',
   ['delivery_point'] = 'delivery point',
   ['delivery'] = 'delivery',
+  ['bus_stop'] = 'bus stop',
+  ['bus_stop_hint'] = 'press ~INPUT_PICKUP~ to stop and pick up passengers.',
   ['public_enter'] = 'press ~INPUT_PICKUP~ to enter the building.',
   ['public_leave'] = 'press ~INPUT_PICKUP~ to go to the entrance of the building.',
 

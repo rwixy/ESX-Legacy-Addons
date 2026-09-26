@@ -27,6 +27,8 @@ Locales['fi'] = {
   ['return_vh_button'] = 'paina ~INPUT_PICKUP~ palautaaksesi ajoneuvo.',
   ['delivery_point'] = 'toimituspiste',
   ['delivery'] = 'toimitus',
+  ['bus_stop'] = 'bussipysäkki',
+  ['bus_stop_hint'] = 'Pysäytä ja ota matkustajia kyytiin painamalla ~INPUT_PICKUP~.',
   ['public_enter'] = 'paina ~INPUT_PICKUP~ mennäksesi taloon sisälle.',
   ['public_leave'] = 'paina ~INPUT_PICKUP~ poistuaksesi talosta.',
 

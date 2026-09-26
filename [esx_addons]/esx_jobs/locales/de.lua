@@ -31,6 +31,8 @@ Locales['de'] = {
   ['return_vh_button'] = 'Drücke [E] um das Fahrzeug zurückzugeben.',
   ['delivery_point'] = 'Lieferungspunkt',
   ['delivery'] = 'Lieferung',
+  ['bus_stop'] = 'Bushaltestelle',
+  ['bus_stop_hint'] = 'Drücke ~INPUT_PICKUP~, um anzuhalten und Fahrgäste aufzunehmen.',
   ['public_enter'] = 'Drücke [E] um das Gebäude zu betreten.',
   ['public_leave'] = 'Drücke [E] um zum eingang des Gebäudes zu gehen.',
 

@@ -27,6 +27,8 @@ Locales['cs'] = {
   ['return_vh_button'] = 'stiskni ~INPUT_PICKUP~ pro navrat vozidla.',
   ['delivery_point'] = 'dorucovaci bod',
   ['delivery'] = 'doruceni',
+  ['bus_stop'] = 'autobusova zastavka',
+  ['bus_stop_hint'] = 'Stiskni ~INPUT_PICKUP~ pro zastaveni a nastup cestujicich.',
   ['public_enter'] = 'stiskni ~INPUT_PICKUP~ pro vstup do budovy.',
   ['public_leave'] = 'stiskni ~INPUT_PICKUP~ pro odchod z budovy.',
 

@@ -31,6 +31,8 @@ Locales['it'] = {
   ['return_vh_button'] = 'premi [E] per restituire il veicolo.',
   ['delivery_point'] = 'punto di consegna',
   ['delivery'] = 'consegna',
+  ['bus_stop'] = 'fermata dell\'autobus',
+  ['bus_stop_hint'] = 'premi ~INPUT_PICKUP~ per fermarti e far salire i passeggeri.',
   ['public_enter'] = 'premi [E] per entrare nell\' edificio.',
   ['public_leave'] = 'premi [E] per andare all\' entrata dell\' edificio.',
 

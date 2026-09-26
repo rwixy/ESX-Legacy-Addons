@@ -31,6 +31,8 @@ Locales["fr"] = {
   ["return_vh_button"] = "appuyez sur ~INPUT_PICKUP~ pour rendre le véhicule.",
   ["delivery_point"] = "point de livraison",
   ["delivery"] = "livraison",
+  ["bus_stop"] = "arrêt de bus",
+  ["bus_stop_hint"] = "appuyez sur ~INPUT_PICKUP~ pour vous arrêter et prendre des passagers.",
   ["public_enter"] = "appuyez sur ~INPUT_PICKUP~ pour entrer dans l'immeuble.",
   ["public_leave"] = "appuyez sur ~INPUT_PICKUP~ pour retourner à l'entrée de l'immeuble.",
 

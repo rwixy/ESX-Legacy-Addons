@@ -31,6 +31,8 @@ Locales["hu"] = {
 	["return_vh_button"] = "Nyomj [E] gombot hogy vissza add az autót.",
 	["delivery_point"] = "szállítási pont",
 	["delivery"] = "szállítás",
+	["bus_stop"] = "buszmegálló",
+	["bus_stop_hint"] = "Nyomd meg a ~INPUT_PICKUP~ gombot a megálláshoz és az utasok felvételéhez.",
 	["public_enter"] = "nyomj [E] gombot hogy belépj az épületbe.",
 	["public_leave"] = "nyomj [E] gombot hogy kilépj az épületböl.",
 	

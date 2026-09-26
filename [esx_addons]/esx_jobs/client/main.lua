@@ -134,7 +134,7 @@ AddEventHandler('esx_jobs:action', function(job, zone, zoneKey)
 		end
 		TriggerServerEvent('esx_jobs:startWork', zone.Item, zoneKey)
 	end
-	--nextStep(zone.GPS)
+	nextStep(zone.GPS)
 end)
 
 function nextStep(gps)

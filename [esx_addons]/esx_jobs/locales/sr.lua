@@ -31,6 +31,8 @@ Locales['sr'] = {
 		['return_vh_button'] = 'pritisni [E] da vratiš vozilo.',
 		['delivery_point'] = 'mesto isporuke',
 		['delivery'] = 'isporuka',
+		['bus_stop'] = 'autobusko stajalište',
+		['bus_stop_hint'] = 'Pritisnite ~INPUT_PICKUP~ da stanete i primite putnike.',
 		['public_enter'] = 'pritisni [E] da uđes.',
 		['public_leave'] = 'pritisni [E] da odeš do ulaza u zgradu.',
 	  
